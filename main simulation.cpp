@@ -50,12 +50,15 @@ int main() {
 		demesP.push_back(new vector<Phage*>);
 		for (j = 0; j <= N0; j++)
 		{
-			(*demesP[i]).push_back(new Phage);
-			(*demesP[i])[j]->label = 1;
-			(*demesP[i])[j]->pmigra = pmigra;
-			(*demesP[i])[j]->qd = qd;
-			(*demesP[i])[j]->qiB = qiB;
-			(*demesP[i])[j]->qiI = qiI;
+			if (i == 0)
+			{
+				(*demesP[i]).push_back(new Phage);
+				(*demesP[i])[j]->label = 1;
+				(*demesP[i])[j]->pmigra = pmigra;
+				(*demesP[i])[j]->qd = qd;
+				(*demesP[i])[j]->qiB = qiB;
+				(*demesP[i])[j]->qiI = qiI;
+			}
 		}
 	}
 
