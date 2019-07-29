@@ -22,7 +22,7 @@ using namespace GRAPHCODE_NS;
 
 /* use BacteriaArch to set initial state of created Bacterias */
 //Bacteria BacteriaArch;
-//make_model(BacteriaArch);
+//ace smake_model(BacteriaArch);
 
 inline Cell* getCell(GraphID_t id) 
 {
