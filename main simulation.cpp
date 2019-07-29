@@ -9,7 +9,6 @@ int main() {
 
 	//system parameters
 	int nx, ny;  //dimensions of space
-	urand u;     //random generator for positions
 	double dt;   //time per simulation step
 	double dx;	//unit deme length
 	int tao;	//lysis time / tstep
