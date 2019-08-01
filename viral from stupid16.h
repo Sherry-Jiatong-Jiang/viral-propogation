@@ -1,4 +1,7 @@
-#include <array>
+#include <vector>
+using std::vector;
+#include <iostream>
+using std::ostream;
 
 class Phage
 {
@@ -14,10 +17,10 @@ public:
   
   Phage(): label(1), qd(0.1), qiI(0.2), qiB(0.2), pmigra(0.3) {}
   
-  void move();
+  /*void move();
   void inject_i();
   void inject_u(); 
-  void die();
+  void die();*/
   
 };
 
@@ -40,11 +43,10 @@ public:
 };
 
 
-class ViralModel
+/*class ViralModel
 {
 public:
 
-//int nx, ny;  //dimensions of space
 
   //urand u;     //random generator for positions ????????????
   int tstep;   //timestep - updated each time movephages is called
@@ -60,3 +62,18 @@ public:
   void lyse();
   void moveframe();
 };
+*/
+
+//overloading cout operator from https://stackoverflow.com/questions/10750057/how-to-print-out-the-contents-of-a-vector.
+template<typename T>
+ostream& operator<< (ostream& out, const vector<T>& v) {
+	out << "{";
+	size_t last = v.size() - 1;
+	for (size_t i = 0; i < v.size(); ++i) {
+		out << v[i];
+		if (i != last)
+			out << ", ";
+	}
+	out << "}";
+	return out;
+}
