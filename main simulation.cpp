@@ -16,7 +16,7 @@ int main()
 	int tao = 50;	//(lysis time / tstep)
 	int burst_size = 50;
 	int X = 100, N = 100, Np = N * burst_size;//max demes, max bacteria, and max phages max phages where applicable????????????????
-	int N0 = 0;		//initial phage numbers in the 1st deme
+	int N0 = 10;		//initial phage numbers in the 1st deme
 	int simulation_steps = 10;	//total simulation steps (total time/dt)
 	int visualization_steps = 1;	//how many steps before each output on the screen
 	
@@ -26,7 +26,7 @@ int main()
 	double qiB = 0.2;	//infecting uninfected bacteria probs
 	double pmigra = 0.05;	//migration probability (to both sides)
 
-	vector <int> output_population;	//temporary outputof phage population distribution
+	vector <int> output_population(X);	//temporary outputof phage population distribution
 	//vector <int> output_labels;	//temporary outputof phage genetic label distribution
 	//double heterozygosity;	//to characterise genetic diversity at the wave front
 	
@@ -48,7 +48,7 @@ int main()
 	a group of vectors which represent demes of bacteria and phages respectively.
 	A vector of a deme of phages, e.g., contains pointers of phage objects.*/
 
-	int i, j, k, a=0, b=0; //to be used in the for loops
+	int i, j, k, a=0, b=0, c=0; //to be used in the for loops
 
 	for (i = 0; i < X; i++)
 	{
@@ -71,7 +71,7 @@ int main()
 		demesP[i] = new vector<Phage*>;	//X demes of phages in total
 		if (i == 0)
 		{
-			for (j = 0; j < std::round(N0/2); j++)	//N0 phages in the 1st deme, 0 otherwise, initially. labels to be initialized as below
+			for (j = 0; j < round(N0/2); j++)	//N0 phages in the 1st deme, 0 otherwise, initially. labels to be initialized as below
 			{
 				(*demesP[i]).push_back(new Phage);	
 				(*demesP[i])[j]->label = 1;
@@ -80,7 +80,7 @@ int main()
 				(*demesP[i])[j]->qiB = qiB;
 				(*demesP[i])[j]->qiI = qiI;
 			}
-			for (j = std::round(N0 / 2); j < N0; j++)
+			for (j = round(N0 / 2); j < N0; j++)
 			{
 				(*demesP[i]).push_back(new Phage);
 				(*demesP[i])[j]->label = 2;
@@ -104,7 +104,8 @@ int main()
 
 	//i: simulation timestep
 	for (i = 0; i < simulation_steps; i++)
-	{	
+	{
+		total_phage_size = 0;
 		for (j = 0; j < X; j++)
 		{
 			total_phage_size += (*demesP[j]).size();
@@ -149,37 +150,39 @@ int main()
 
 		/*die*/
 
-		death_number = std::round(qd * total_phage_size);
+		death_number = round(qd * total_phage_size);
 		for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
 		{
 			//randomly pick one phage
 			srand(time(NULL));
 			total_phage_index = rand() % total_phage_size;
-			a = total_phage_size;
+			a = total_phage_index;
 			//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
 			for (j = 0; j < X; j++) 
-			{a = a - (*demesP[j]).size();
-			if (a < 0) 
-			{ 
-				b = (*demesP[j]).size() + a;
-				break; 
+			{
+				a = a - (*demesP[j]).size();
+				if (a < 0)
+				{
+					b = (*demesP[j]).size() + a;
+					b = b - 1;
+					break;
+				}
 			}
-			}
-			delete (*demesP[i])[j];
-			(*demesP[i]).erase((*demesP[i]).begin() + j);
+			delete (*demesP[j])[b];
+			(*demesP[j]).erase((*demesP[j]).begin() + b);
 		}
 
 
 
 		/*infect uninfected and infected bacteria*/
 
-		infect_B_number = std::round(qiB * total_phage_size);
+		infect_B_number = round(qiB * total_phage_size);
 		for (k = 0; k < infect_B_number; k++)
 		{
 			//randomly pick one phage
 			srand(time(NULL));
 			total_phage_index = rand() % total_phage_size;
-			a = total_phage_size;
+			a = total_phage_index;
 			//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
 			for (j = 0; j < X; j++)
 			{
@@ -187,6 +190,7 @@ int main()
 				if (a < 0)
 				{
 					b = (*demesP[j]).size() + a;
+					b = b - 1;
 					break;
 				}
 			}
@@ -196,10 +200,10 @@ int main()
 			bacterium_index = rand() % (*demesB[j]).size();
 
 			//if infecting uninfected bacteria:
-			if ((*((*demesB[i])[bacterium_index])).infected == false)
+			if ((*((*demesB[j])[bacterium_index])).infected == false)
 			{
 				(*((*demesB[j])[bacterium_index])).label = (*((*demesP[j])[b])).label;
-				(*((*demesB[i])[bacterium_index])).infected = true;
+				(*((*demesB[j])[bacterium_index])).infected = true;
 
 				//update infectionTime with newly infected bacteria
 				(*infectionTime[0]).push_back((*demesB[j])[bacterium_index]);
@@ -213,13 +217,13 @@ int main()
 
 		/*migration*/
 
-		migration_number = std::round(pmigra / 2 * total_phage_size);
+		migration_number = round(pmigra / 2 * total_phage_size);
 		for (k = 0; k < migration_number; k++)
 		{
 			//randomly pick one phage
 			srand(time(NULL));
 			total_phage_index = rand() % total_phage_size;
-			a = total_phage_size;
+			a = total_phage_index;
 			//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
 			for (j = 0; j < X; j++)
 			{
@@ -227,6 +231,7 @@ int main()
 				if (a < 0)
 				{
 					b = (*demesP[j]).size() + a;
+					b = b - 1;
 					break;
 				}
 			}
@@ -286,9 +291,9 @@ int main()
 		{
 			for (j = 0; j < demesP.size(); j++)
 			{
-				output_population.push_back((*demesP[j]).size());
+				output_population[j] = (*demesP[j]).size();
 			}
-			cout << "Current simulation step: " << i << endl;
+			cout << "Current simulation step: " << i + 1 << endl;
 			cout << "Phage population within each deme: " << output_population << endl;
 			//cout << "Gene label with the largest frequency within each deme: " << output_labels << endl;
 			//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
