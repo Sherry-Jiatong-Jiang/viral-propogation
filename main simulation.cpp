@@ -245,17 +245,17 @@ int main()
 			if (j > 0)	//if not the first deme:
 			{
 				srand(time(NULL));
-				left_phage_index = rand() % (*demesP[j - 1]).size();
+				left_phage_index = rand() % ((*demesP[j - 1]).size());
 
 				temp = (*demesP[j])[b];
 				(*demesP[j])[b] = (*demesP[j - 1])[left_phage_index];
 				(*demesP[j - 1])[left_phage_index] = temp;
 			}
 
-			if (j < X)	//if not the last deme:
+			if (j < X - 1)	//if not the last deme:
 			{
 				srand(time(NULL));
-				right_phage_index = rand() % (*demesP[j + 1]).size();
+				right_phage_index = rand() % ((*demesP[j + 1]).size());
 
 				temp = (*demesP[j])[phage_index];
 				(*demesP[j])[phage_index] = (*demesP[j + 1])[right_phage_index];
