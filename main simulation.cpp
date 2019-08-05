@@ -161,7 +161,7 @@ int main()
 			for (j = 0; j < X; j++) 
 			{
 				a = a - (*demesP[j]).size();
-				if (a < 0)
+				if (a <= 0)
 				{
 					b = (*demesP[j]).size() + a;
 					b = b - 1;
@@ -170,6 +170,7 @@ int main()
 			}
 			delete (*demesP[j])[b];
 			(*demesP[j]).erase((*demesP[j]).begin() + b);
+			total_phage_size -= 1;
 		}
 
 
@@ -187,7 +188,7 @@ int main()
 			for (j = 0; j < X; j++)
 			{
 				a = a - (*demesP[j]).size();
-				if (a < 0)
+				if (a <= 0)
 				{
 					b = (*demesP[j]).size() + a;
 					b = b - 1;
@@ -228,7 +229,7 @@ int main()
 			for (j = 0; j < X; j++)
 			{
 				a = a - (*demesP[j]).size();
-				if (a < 0)
+				if (a <= 0)
 				{
 					b = (*demesP[j]).size() + a;
 					b = b - 1;

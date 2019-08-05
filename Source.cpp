@@ -32,7 +32,7 @@ int main()
 	int burst_size = 50;
 	int X = 4, N = 100, Np = N * burst_size;//max demes, max bacteria, and max phages max phages where applicable????????????????
 	int N0 = 10;		//initial phage numbers in the 1st deme
-	int simulation_steps = 5;	//total simulation steps (total time/dt)
+	int simulation_steps = 100;	//total simulation steps (total time/dt)
 	int visualization_steps = 1;	//how many steps before each output on the screen
 
 	//phage probs parameters (per timestep)
@@ -175,15 +175,16 @@ int main()
 			for (j = 0; j < X; j++)
 			{
 				a = a - (*demesP[j]).size();
-				if (a < 0)
+				if (a <= 0)
 				{
 					b = (*demesP[j]).size() + a;
 					b = b - 1;
 					break;
 				}
 			}
-			delete (*demesP[j])[b];
+			/*delete (*demesP[j])[b];
 			(*demesP[j]).erase((*demesP[j]).begin() + b);
+			total_phage_size -= 1;*/
 		}
 
 
@@ -228,54 +229,54 @@ int main()
 		//}
 
 
-		/*migration*/
+		///*migration*/
 
-		migration_number = round(pmigra / 2 * total_phage_size);
-		for (k = 0; k < migration_number; k++)
-		{
-			//randomly pick one phage
-			srand(time(NULL));
-			total_phage_index = rand() % total_phage_size;
-			a = total_phage_index;
-			//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
-			for (j = 0; j < X; j++)
-			{
-				a = a - (*demesP[j]).size();
-				if (a < 0)
-				{
-					b = (*demesP[j]).size() + a;
-					b = b - 1;
-					break;
-				}
-			}
-			//randomly pick another phage from the same deme, two more from neighbouring demes (deal with repeat????????)
-			srand(time(NULL));
-			phage_index = rand() % (*demesP[j]).size();
+		//migration_number = round(pmigra / 2 * total_phage_size);
+		//for (k = 0; k < migration_number; k++)
+		//{
+		//	//randomly pick one phage
+		//	srand(time(NULL));
+		//	total_phage_index = rand() % total_phage_size;
+		//	a = total_phage_index;
+		//	//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
+		//	for (j = 0; j < X; j++)
+		//	{
+		//		a = a - (*demesP[j]).size();
+		//		if (a <= 0)
+		//		{
+		//			b = (*demesP[j]).size() + a;
+		//			b = b - 1;
+		//			break;
+		//		}
+		//	}
+		//	//randomly pick another phage from the same deme, two more from neighbouring demes (deal with repeat????????)
+		//	srand(time(NULL));
+		//	phage_index = rand() % (*demesP[j]).size();
 
-			//deal with holes ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
+		//	//deal with holes ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
 
-			//swap phages
-			if (j > 0)	//if not the first deme:
-			{
-				srand(time(NULL));
-				left_phage_index = rand() % ((*demesP[j - 1]).size());
+		//	//swap phages
+		//	if (j > 0)	//if not the first deme:
+		//	{
+		//		srand(time(NULL));
+		//		left_phage_index = rand() % ((*demesP[j - 1]).size());
 
-				temp = (*demesP[j])[b];
-				(*demesP[j])[b] = (*demesP[j - 1])[left_phage_index];
-				(*demesP[j - 1])[left_phage_index] = temp;
-			}
+		//		temp = (*demesP[j])[b];
+		//		(*demesP[j])[b] = (*demesP[j - 1])[left_phage_index];
+		//		(*demesP[j - 1])[left_phage_index] = temp;
+		//	}
 
-			if (j < X-1)	//if not the last deme:
-			{
-				srand(time(NULL));
-				right_phage_index = rand() % ((*demesP[j + 1]).size());
+		//	if (j < X-1)	//if not the last deme:
+		//	{
+		//		srand(time(NULL));
+		//		right_phage_index = rand() % ((*demesP[j + 1]).size());
 
-				temp = (*demesP[j])[phage_index];
-				(*demesP[j])[phage_index] = (*demesP[j + 1])[right_phage_index];
-				(*demesP[j + 1])[right_phage_index] = temp;
-			}
+		//		temp = (*demesP[j])[phage_index];
+		//		(*demesP[j])[phage_index] = (*demesP[j + 1])[right_phage_index];
+		//		(*demesP[j + 1])[right_phage_index] = temp;
+		//	}
 
-		}
+		//}
 
 
 		/*old code on bacteria lysis and new phage creation
@@ -309,6 +310,7 @@ int main()
 			
 			cout << "Current simulation step: " << i + 1 << endl;
 			cout << "Phage population within each deme: " << output_population << endl;
+			cout << "phage 3 label:" << (*((*demesP[0])[3])).label;
 			//cout << "Gene label with the largest frequency within each deme: " << output_labels << endl;
 			//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
 			cin >> a;
