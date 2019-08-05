@@ -20,6 +20,9 @@ int main()
 	int simulation_steps = 10;	//total simulation steps (total time/dt)
 	int visualization_steps = 1;	//how many steps before each output on the screen
 
+	bool swap = false;	//if swap is true, use swapping scheme (swapping phages and holes); if false, use random move scheme for phages. 
+						//For both schemes, randomly choose right or left move, use poisson distribution for total number of phages to be randomly selected. 
+
 	//phage probs parameters (per timestep)
 	double qd = 0.01;	//death probs
 	double qiI = 0.2;	//infecting infected bacteria probs
@@ -33,6 +36,8 @@ int main()
 	//intermediate parameters
 	int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
 	int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
+
+	int direction = 0;
 
 	Phage* temp;
 
@@ -97,6 +102,20 @@ int main()
 	{
 		infectionTime[i] = new vector <Bacterium*>;
 	}
+
+
+	//step 0 output showing initial distribuiton
+	for (j = 0; j < X; j++)
+	{
+		output_population[j] = (*demesP[j]).size();
+	}
+
+	cout << "Current simulation step: " << 0 << endl;
+	cout << "Phage population within each deme: " << output_population << endl;
+	//cout << "phage 3 label:" << (*((*demesP[0])[3])).label;
+	//cout << "Gene label with the largest frequency within each deme: " << output_labels << endl;
+	//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
+	//cin >> a;
 
 
 
@@ -227,49 +246,122 @@ int main()
 
 		/*migration*/
 
-		migration_number = round(pmigra / 2 * total_phage_size);
-		for (k = 0; k < migration_number; k++)
+		if (swap == true)
 		{
-			//randomly pick one phage
-			srand(time(NULL));
-			total_phage_index = rand() % total_phage_size;
-			a = total_phage_index;
-			//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
-			for (j = 0; j < X; j++)
+			migration_number = round(pmigra / 2 * total_phage_size);
+			for (k = 0; k < migration_number; k++)
 			{
-				a = a - (*demesP[j]).size();
-				if (a <= 0)
+				//randomly pick one phage
+				srand(time(NULL));
+				total_phage_index = rand() % total_phage_size + 1;
+				a = total_phage_index;
+				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
+				for (j = 0; j < X; j++)
 				{
-					b = (*demesP[j]).size() + a;
-					b = b - 1;
-					break;
+					a = a - (*demesP[j]).size();
+					if (a <= 0)
+					{
+						b = (*demesP[j]).size() + a;
+						b = b - 1;
+						break;
+					}
 				}
-			}
-			//randomly pick another phage from the same deme, two more from neighbouring demes (deal with repeat????????)
-			srand(time(NULL));
-			phage_index = rand() % (*demesP[j]).size();
 
-			//deal with holes ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
 
-			//swap phages
-			if (j > 0)	//if not the first deme:
-			{
+				//randomly pick another phage from the same deme, two more from neighbouring demes (deal with repeat????????)
 				srand(time(NULL));
-				left_phage_index = rand() % ((*demesP[j - 1]).size());
+				phage_index = rand() % (*demesP[j]).size();
 
-				temp = (*demesP[j])[b];
-				(*demesP[j])[b] = (*demesP[j - 1])[left_phage_index];
-				(*demesP[j - 1])[left_phage_index] = temp;
+				//deal with holes ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
+
+				//swap phages
+				if (j > 0)	//if not the first deme:
+				{
+					srand(time(NULL));
+					left_phage_index = rand() % ((*demesP[j - 1]).size());
+
+					temp = (*demesP[j])[b];
+					(*demesP[j])[b] = (*demesP[j - 1])[left_phage_index];
+					(*demesP[j - 1])[left_phage_index] = temp;
+				}
+
+				if (j < X - 1)	//if not the last deme:
+				{
+					srand(time(NULL));
+					right_phage_index = rand() % ((*demesP[j + 1]).size());
+
+					temp = (*demesP[j])[phage_index];
+					(*demesP[j])[phage_index] = (*demesP[j + 1])[right_phage_index];
+					(*demesP[j + 1])[right_phage_index] = temp;
+				}
+
+
 			}
+		}
 
-			if (j < X - 1)	//if not the last deme:
+		else
+		{
+			migration_number = round(pmigra * total_phage_size);
+			for (k = 0; k < migration_number; k++)
 			{
+				//randomly pick one phage
 				srand(time(NULL));
-				right_phage_index = rand() % ((*demesP[j + 1]).size());
+				total_phage_index = rand() % total_phage_size + 1;
+				a = total_phage_index;
+				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
+				for (j = 0; j < X; j++)
+				{
+					a = a - (*demesP[j]).size();
+					if (a <= 0)
+					{
+						b = (*demesP[j]).size() + a;
+						b = b - 1;
+						break;
+					}
+				}
+				//if in the first deme, only move to the right
+				if (j == 0)
+				{
+					(*demesP[j + 1]).push_back((*demesP[j])[b]);
+					(*demesP[j]).erase((*demesP[j]).begin() + b);
+				}
+				//if in the last deme, create new deme
+				else if (j == X - 1)
+				{
+					demesP.push_back(new vector<Phage*>);
 
-				temp = (*demesP[j])[phage_index];
-				(*demesP[j])[phage_index] = (*demesP[j + 1])[right_phage_index];
-				(*demesP[j + 1])[right_phage_index] = temp;
+					//randomly choose to move to the left or the right (0: left; 1: right)
+					srand(time(NULL));
+					direction = rand() % 2;
+					if (direction == 0)
+					{
+						(*demesP[j - 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
+					else
+					{
+						(*demesP[j + 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
+					//delete first deme (only at the end in order not to mess up with indexes).
+					demesP.erase(demesP.begin());
+				}
+				else
+				{
+					//randomly choose to move to the left or the right (0: left; 1: right)
+					srand(time(NULL));
+					direction = rand() % 2;
+					if (direction == 0)
+					{
+						(*demesP[j - 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
+					else
+					{
+						(*demesP[j + 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
+				}
 			}
 
 		}
