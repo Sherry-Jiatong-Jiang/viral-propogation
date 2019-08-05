@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int main() 
+int main()
 {
 	//system parameters
 	double dt = 100;   //time (sec) per simulation step
@@ -19,7 +19,7 @@ int main()
 	int N0 = 10;		//initial phage numbers in the 1st deme
 	int simulation_steps = 10;	//total simulation steps (total time/dt)
 	int visualization_steps = 1;	//how many steps before each output on the screen
-	
+
 	//phage probs parameters (per timestep)
 	double qd = 0.01;	//death probs
 	double qiI = 0.2;	//infecting infected bacteria probs
@@ -29,26 +29,26 @@ int main()
 	vector <int> output_population(X);	//temporary outputof phage population distribution
 	//vector <int> output_labels;	//temporary outputof phage genetic label distribution
 	//double heterozygosity;	//to characterise genetic diversity at the wave front
-	
+
 	//intermediate parameters
 	int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
 	int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
-	
+
 	Phage* temp;
 
 	vector <vector <Bacterium*>* > demesB(X);
 	vector <vector <Phage*>* > demesP(X);
 	vector <vector <Bacterium*>* > infectionTime(tao);
 
-	
-	
+
+
 	/*Initialization of demes and agents*/
-	
+
 	/*demesB and demesP are two vectors of initial size X storing pointers which point to
 	a group of vectors which represent demes of bacteria and phages respectively.
 	A vector of a deme of phages, e.g., contains pointers of phage objects.*/
 
-	int i, j, k, a=0, b=0, c=0; //to be used in the for loops
+	int i, j, k, a = 0, b = 0, c = 0; //to be used in the for loops
 
 	for (i = 0; i < X; i++)
 	{
@@ -71,9 +71,9 @@ int main()
 		demesP[i] = new vector<Phage*>;	//X demes of phages in total
 		if (i == 0)
 		{
-			for (j = 0; j < round(N0/2); j++)	//N0 phages in the 1st deme, 0 otherwise, initially. labels to be initialized as below
+			for (j = 0; j < round(N0 / 2); j++)	//N0 phages in the 1st deme, 0 otherwise, initially. labels to be initialized as below
 			{
-				(*demesP[i]).push_back(new Phage);	
+				(*demesP[i]).push_back(new Phage);
 				(*demesP[i])[j]->label = 1;
 				(*demesP[i])[j]->pmigra = pmigra;
 				(*demesP[i])[j]->qd = qd;
@@ -119,12 +119,12 @@ int main()
 		//create new phages, and delete lysed bacteria from object storage & from infectionTime & from demesB! 
 		//(not the other way round which causes memory leak!)
 		if ((*infectionTime.back()).empty() == false)
-		{	
+		{
 			int s = (*(infectionTime.back())).size();
 			for (j = 0; j < s; j++)
 			{
 				//create a reference to the last column of infectionTime, temp
-				vector<Bacterium*> & temp = *infectionTime.back();
+				vector<Bacterium*>& temp = *infectionTime.back();
 				int label = temp[j]->label;
 				int h = temp[j]->demeIndex;
 				int v = temp[j]->indexInDeme;
@@ -150,29 +150,38 @@ int main()
 
 		/*die*/
 
-		death_number = round(qd * total_phage_size);
-		for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
+		try
 		{
-			//randomly pick one phage
-			srand(time(NULL));
-			total_phage_index = rand() % total_phage_size;
-			a = total_phage_index;
-			//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
-			for (j = 0; j < X; j++) 
+			death_number = round(qd * total_phage_size);
+			for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
 			{
-				a = a - (*demesP[j]).size();
-				if (a <= 0)
+				//randomly pick one phage
+				srand(time(NULL));
+				total_phage_index = rand() % total_phage_size + 1;
+				a = total_phage_index;
+				//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
+				for (j = 0; j < X; j++)
 				{
-					b = (*demesP[j]).size() + a;
-					b = b - 1;
-					break;
+					a = a - (*demesP[j]).size();
+					if (a <= 0)
+					{
+						b = (*demesP[j]).size() + a;
+						b = b - 1;
+						break;
+					}
 				}
+				delete (*demesP[j])[b];
+				//if (b < (*demesP[j]).size())
+				{(*demesP[j]).erase((*demesP[j]).begin() + b); }
+				total_phage_size = total_phage_size - 1;
 			}
-			delete (*demesP[j])[b];
-			(*demesP[j]).erase((*demesP[j]).begin() + b);
-			total_phage_size -= 1;
-		}
 
+
+		}
+		catch (exception& e)
+		{
+			cout << "Standard exception: " << e.what() << endl;
+		}
 
 
 		/*infect uninfected and infected bacteria*/
@@ -214,7 +223,7 @@ int main()
 			delete (*demesP[j])[b];
 			(*demesP[j]).erase((*demesP[j]).begin() + b);
 		}
-		
+
 
 		/*migration*/
 
@@ -262,7 +271,7 @@ int main()
 				(*demesP[j])[phage_index] = (*demesP[j + 1])[right_phage_index];
 				(*demesP[j + 1])[right_phage_index] = temp;
 			}
-			
+
 		}
 
 
@@ -300,9 +309,9 @@ int main()
 			//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
 			cin >> a;
 		}
-		
+
 	}
-	
+
 
 
 }
