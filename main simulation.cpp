@@ -131,6 +131,7 @@ int main()
 		}
 
 
+		/*Lyse and release*/
 
 		//create new column in infectionTime vector
 		infectionTime.insert(infectionTime.begin(), new vector<Bacterium*>);
@@ -210,7 +211,7 @@ int main()
 		{
 			//randomly pick one phage
 			srand(time(NULL));
-			total_phage_index = rand() % total_phage_size;
+			total_phage_index = rand() % total_phage_size + 1;
 			a = total_phage_index;
 			//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
 			for (j = 0; j < X; j++)

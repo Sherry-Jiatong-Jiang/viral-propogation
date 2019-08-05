@@ -146,38 +146,40 @@ int main()
 		}
 
 
-		////create new column in infectionTime vector
-		//infectionTime.insert(infectionTime.begin(), new vector<Bacterium*>);
+		/*Lyse and release*/
 
-		////create new phages, and delete lysed bacteria from object storage & from infectionTime & from demesB! 
-		////(not the other way round which causes memory leak!)
-		//if ((*infectionTime.back()).empty() == false)
-		//{
-		//	int s = (*(infectionTime.back())).size();
-		//	for (j = 0; j < s; j++)
-		//	{
-		//		//create a reference to the last column of infectionTime, temp
-		//		vector<Bacterium*>& temp = *infectionTime.back();
-		//		int label = temp[j]->label;
-		//		int h = temp[j]->demeIndex;
-		//		int v = temp[j]->indexInDeme;
+		//create new column in infectionTime vector
+		infectionTime.insert(infectionTime.begin(), new vector<Bacterium*>);
 
-		//		//create new phages
-		//		(*demesP[h]).push_back(new Phage[burst_size]);	//is this doable????????????????????????????
-		//		(*demesP[h])[j]->label = label;
-		//		(*demesP[h])[j]->pmigra = pmigra;
-		//		(*demesP[h])[j]->qd = qd;
-		//		(*demesP[h])[j]->qiB = qiB;
-		//		(*demesP[h])[j]->qiI = qiI;
+		//create new phages, and delete lysed bacteria from object storage & from infectionTime & from demesB! 
+		//(not the other way round which causes memory leak!)
+		if ((*infectionTime.back()).empty() == false)
+		{
+			int s = (*(infectionTime.back())).size();
+			for (j = 0; j < s; j++)
+			{
+				//create a reference to the last column of infectionTime, temp
+				vector<Bacterium*>& temp = *infectionTime.back();
+				int label = temp[j]->label;
+				int h = temp[j]->demeIndex;
+				int v = temp[j]->indexInDeme;
 
-		//		//delete lysed bacteria from object storage& from infectionTime& from demesB
-		//		delete (*demesB[h])[v];
-		//		(*demesB[h]).erase((*demesB[h]).begin() + v);
-		//		(*infectionTime.back()).erase((*infectionTime.back()).begin() + s - 1);
-		//	}
-		//}
-		////delete last column in infectionTime vector
-		//infectionTime.erase(infectionTime.begin() + infectionTime.size() - 1);
+				//create new phages
+				(*demesP[h]).push_back(new Phage[burst_size]);	//is this doable????????????????????????????
+				(*demesP[h])[j]->label = label;
+				(*demesP[h])[j]->pmigra = pmigra;
+				(*demesP[h])[j]->qd = qd;
+				(*demesP[h])[j]->qiB = qiB;
+				(*demesP[h])[j]->qiI = qiI;
+
+				//delete lysed bacteria from object storage& from infectionTime& from demesB
+				delete (*demesB[h])[v];
+				(*demesB[h]).erase((*demesB[h]).begin() + v);
+				(*infectionTime.back()).erase((*infectionTime.back()).begin() + s - 1);
+			}
+		}
+		//delete last column in infectionTime vector
+		infectionTime.erase(infectionTime.begin() + infectionTime.size() - 1);
 
 
 
@@ -220,44 +222,45 @@ int main()
 
 
 
-		///*infect uninfected and infected bacteria*/
+		/*infect uninfected and infected bacteria*/
 
-		//infect_B_number = std::round(qiB * total_phage_size);
-		//for (k = 0; k < infect_B_number; k++)
-		//{
-		//	//randomly pick one phage
-		//	srand(time(NULL));
-		//	total_phage_index = rand() % total_phage_size;
-		//	a = total_phage_size;
-		//	//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
-		//	for (j = 0; j < X; j++)
-		//	{
-		//		a = a - (*demesP[j]).size();
-		//		if (a < 0)
-		//		{
-		//			b = (*demesP[j]).size() + a;
-		//			break;
-		//		}
-		//	}
+		infect_B_number = std::round(qiB * total_phage_size);
+		for (k = 0; k < infect_B_number; k++)
+		{
+			//randomly pick one phage
+			srand(time(NULL));
+			total_phage_index = rand() % total_phage_size + 1;
+			a = total_phage_size;
+			//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
+			for (j = 0; j < X; j++)
+			{
+				a = a - (*demesP[j]).size();
+				if (a <= 0)
+				{
+					b = (*demesP[j]).size() + a;
+					b = b - 1;
+					break;
+				}
+			}
 
-		//	//randomly pick one bacterium from the same deme
-		//	srand(time(NULL));
-		//	bacterium_index = rand() % (*demesB[j]).size();
+			//randomly pick one bacterium from the same deme	//if no bacteria???????????????????????????
+			srand(time(NULL));
+			bacterium_index = rand() % (*demesB[j]).size();
 
-		//	//if infecting uninfected bacteria:
-		//	if ((*((*demesB[i])[bacterium_index])).infected == false)
-		//	{
-		//		(*((*demesB[j])[bacterium_index])).label = (*((*demesP[j])[b])).label;
-		//		(*((*demesB[i])[bacterium_index])).infected = true;
+			//if infecting uninfected bacteria:
+			if ((*((*demesB[j])[bacterium_index])).infected == false)
+			{
+				(*((*demesB[j])[bacterium_index])).label = (*((*demesP[j])[b])).label;
+				(*((*demesB[j])[bacterium_index])).infected = true;
 
-		//		//update infectionTime with newly infected bacteria
-		//		(*infectionTime[0]).push_back((*demesB[j])[bacterium_index]);
-		//	}
+				//update infectionTime with newly infected bacteria
+				(*infectionTime[0]).push_back((*demesB[j])[bacterium_index]);
+			}
 
-		//	//delete phage after infection
-		//	delete (*demesP[j])[b];
-		//	(*demesP[j]).erase((*demesP[j]).begin() + b);
-		//}
+			//delete phage after infection
+			delete (*demesP[j])[b];
+			(*demesP[j]).erase((*demesP[j]).begin() + b);
+		}
 
 
 		/*migration*/
