@@ -30,7 +30,11 @@ int main()
 	double qiB = 0.01;	//infecting uninfected bacteria probs
 	double pmigra = 0.005;	//migration probability (to both sides)
 
-	vector <int> output_population(X);	//temporary outputof phage population distribution
+	vector <int> P_population(X);	//output of phage population distribution
+	vector <int> IB_population(X);	//output of total bacteria population distribution
+	vector <int> B_population(X);	//output of uninfected bacteria population distribution
+	vector <int> I_population(X);	//output of infected bacteria population distribution
+
 	//vector <int> output_labels;	//temporary outputof phage genetic label distribution
 	//double heterozygosity;	//to characterise genetic diversity at the wave front
 
@@ -104,14 +108,26 @@ int main()
 	}
 
 
-	//step 0 output showing initial distribuiton
+	//step 0 output showing initial distribution
 	for (j = 0; j < X; j++)
 	{
-		output_population[j] = (*demesP[j]).size();
+		P_population[j] = (*demesP[j]).size();
+		IB_population[j] = (*demesB[j]).size();
+		I_population[j] = 0;
+		for (k = 0; k < (*demesB[j]).size(); k++)
+		{
+			if ((*demesB[j])[k]->infected == true)
+			{
+				I_population[j] += 1;
+			}
+		}
+		B_population[j] = IB_population[j] - I_population[j];
 	}
 
 	cout << "Current simulation step: " << 0 << endl;
-	cout << "Phage population within each deme: " << output_population << endl;
+	cout << "Phage population within each deme: " << P_population << endl;
+	cout << "Uninfected Bacteria population within each deme: " << B_population << endl;
+	cout << "Infected Bacteria population within each deme: " << I_population << endl;
 	//cout << "phage 3 label:" << (*((*demesP[0])[3])).label;
 	//cout << "Gene label with the largest frequency within each deme: " << output_labels << endl;
 	//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
@@ -258,7 +274,7 @@ int main()
 
 		/*migration*/
 
-		if (swap == true)
+		if (swap == true)	//complete this optoin????????????????????????
 		{
 			migration_number = round(pmigra / 2 * total_phage_size);
 			for (k = 0; k < migration_number; k++)
@@ -341,6 +357,17 @@ int main()
 				else if (j == X - 1)
 				{
 					demesP.push_back(new vector<Phage*>);
+					demesB.push_back(new vector<Bacterium*>);
+					for (k = 0; k < N; k++)
+					{
+						(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
+						(*demesB[j + 1])[k]->infected = false;
+						(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep original deme index as attribute, not to be changed when frame moves.
+						(*demesB[j + 1])[k]->label = 0;
+						(*demesB[j + 1])[k]->lysed = false;
+						(*demesB[j + 1])[k]->ts_after_infection = 0;
+						(*demesB[j + 1])[k]->burst_size = burst_size;
+					}
 
 					////randomly choose to move to the left or the right (1: left; 0: right)
 					//srand(time(NULL));
@@ -368,6 +395,7 @@ int main()
 					}
 					//delete first deme (only at the end in order not to mess up with indexes).
 					demesP.erase(demesP.begin());
+					demesB.erase(demesB.begin());
 				}
 				else
 				{
@@ -428,10 +456,22 @@ int main()
 		{
 			for (j = 0; j < demesP.size(); j++)
 			{
-				output_population[j] = (*demesP[j]).size();
+				P_population[j] = (*demesP[j]).size();
+				IB_population[j] = (*demesB[j]).size();
+				I_population[j] = 0;
+				for (k = 0; k < (*demesB[j]).size(); k++)
+				{
+					if ((*demesB[j])[k]->infected == true)
+					{
+						I_population[j] += 1;
+					}
+				}
+				B_population[j] = IB_population[j] - I_population[j];
 			}
 			cout << "Current simulation step: " << i + 1 << endl;
-			cout << "Phage population within each deme: " << output_population << endl;
+			cout << "Phage population within each deme: " << P_population << endl;
+			cout << "Uninfected bacteria population within each deme: " << B_population << endl;
+			cout << "Infected bacteria population within each deme: " << I_population << endl;
 			//cout << "Gene label with the largest frequency within each deme: " << output_labels << endl;
 			//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
 		}
