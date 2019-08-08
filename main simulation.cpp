@@ -339,7 +339,8 @@ int main()
 
 				random_device rd;
 				mt19937 e{ rd() }; // or std::default_random_engine e{rd()};
-				uniform_int_distribution<int> dist{ 0, (*demesB[j]).size() - 1 };
+				int size = (*demesB[j]).size() - 1;
+				uniform_int_distribution<int> dist{ 0, size};
 				// get random numbers with:
 				bacterium_index = dist(e);
 
@@ -390,7 +391,8 @@ int main()
 				phage_index = rand() % (*demesP[j]).size();*/
 				random_device rd;
 				mt19937 e{ rd() }; // or std::default_random_engine e{rd()};
-				uniform_int_distribution<int> dist{ 0, (*demesP[j]).size() - 1 };
+				int size = (*demesP[j]).size() - 1;
+				uniform_int_distribution<int> dist{ 0, size};
 				// get random numbers with:
 				phage_index = dist(e);
 
