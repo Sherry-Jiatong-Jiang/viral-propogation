@@ -1,5 +1,6 @@
 #include "viral from stupid16.h"
 #include <iostream>
+#include <fstream>
 #include <cmath>	//for rounding
 #include <cstdlib>	//for random generators
 #include <array>
@@ -9,8 +10,20 @@
 #include <string>	//for "cout ambiguous" error
 using namespace std;
 
+
+ofstream outfileP;
+ofstream outfileB;
+ofstream outfileI;
+ofstream outfileH;
+string filenameP = "Psim001.dat";
+string filenameB = "Bsim001.dat";
+string filenameI = "Isim001.dat";
+string filenameH = "Hsim001.dat";
+
+
 int main()
 {
+
 	//system parameters
 	double dt = 100;   //time (sec) per simulation step
 	double dx = 0.1;	//unit deme length (mm)
@@ -21,7 +34,7 @@ int main()
 	int N0 = 1000;		//initial phage numbers in the 1st deme
 	const int labels = 10;	// << X for current initialization scheme! number of initial different gene labels, constant to be used to initialize array size later
 	const int simulation_steps = 100;	//total simulation steps (total time/dt)
-	int visualization_steps = 5;	//how many steps before each output on the screen
+	const int visualization_steps = 5;	//how many steps before each output on the screen
 
 	bool swap = false;	//if swap is true, use swapping scheme (swapping phages and holes); if false, use random move scheme for phages. 
 	//For both schemes, randomly choose right or left move, use poisson distribution for total number of phages to be randomly selected. 
@@ -40,7 +53,7 @@ int main()
 	double label_proportion[labels][X] = {};//output of proportional distribution of each label within each deme, and initialize to zeroes ([0] corresponding to label 1 etc)
 	int tot = 0;	//temporary storage of total phage population at each timestep 
 	double label_frequency[labels] = {};	//each element corresponds to the total frequency of a label withinin the whole population, to be used in the calculation of heterozygosity.
-	double heterozygosity [simulation_steps + 1] = {};	//array to characterise genetic diversity at the wave front
+	vector<double> heterozygosity;	//of size (simulation_steps / visualization_steps + 1), array to characterise genetic diversity at the wave front
 
 	//intermediate parameters
 	int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
@@ -153,6 +166,7 @@ int main()
 	}
 	//calculate heterozygosity before dividing labels into proportions!
 	tot = 0;
+	heterozygosity.push_back(0);
 	for (k = 0; k < labels; k++)
 	{
 		label_frequency[k] = 0;
@@ -171,7 +185,7 @@ int main()
 	}
 	for (k = 0; k < labels; k++)
 	{
-		heterozygosity[0] += label_frequency[k] * (1 - label_frequency[k]);
+		heterozygosity.back() += label_frequency[k] * (1 - label_frequency[k]);
 	}
 
 	//calcalate real label_proportions
@@ -599,6 +613,7 @@ int main()
 
 			//calculate heterozygosity before dividing labels into proportions!
 			tot = 0;
+			heterozygosity.push_back(0);
 			for (k = 0; k < labels; k++)
 			{
 				label_frequency[k] = 0;
@@ -617,7 +632,7 @@ int main()
 			}
 			for (k = 0; k < labels; k++)
 			{
-				heterozygosity[i + 1] += label_frequency[k] * (1 - label_frequency[k]);
+				heterozygosity.back() += label_frequency[k] * (1 - label_frequency[k]);
 			}
 
 			//calcalate real label_proportions
@@ -632,23 +647,48 @@ int main()
 				}
 			}
 			cout << "Current simulation step: " << i + 1 << endl;
-			cout << "Phage population within each deme: " << P_population << endl;
+			/*cout << "Phage population within each deme: " << P_population << endl;
 			cout << "Uninfected bacteria population within each deme: " << B_population << endl;
-			cout << "Infected bacteria population within each deme: " << I_population << endl;
+			cout << "Infected bacteria population within each deme: " << I_population << endl;*/
 			for (k = 0; k < labels; k++)	//reduce this section after making code modular???????????????????????????????
 			{
-				cout << "Label " << k + 1 << " proportion within each deme: ";
+				//cout << "Label " << k + 1 << " proportion within each deme: ";
 				for (j = 0; j < X; j++)
 				{
-					 cout << label_proportion[k][j] << ", ";
+					 //cout << label_proportion[k][j] << ", ";
 				}
-				cout << endl;
+				//cout << endl;
 			}	
-			cout << "Heterozygosity within current frame: " << heterozygosity[i + 1] << endl;
+			/*cout << "Heterozygosity within current frame: " << heterozygosity.back() << endl;*/
+
+			outfileP.open(filenameP, ios::app);
+			for (j = 0; j < X; j++)
+			outfileP << P_population[j] << " ";
+			outfileP << endl;
+			outfileP.close();
+
+			outfileB.open(filenameB, ios::app);			
+			for (j = 0; j < X; j++)
+				outfileB << B_population[j] << " ";
+			outfileB << endl;
+			outfileB.close();
+			
+			outfileI.open(filenameI, ios::app);
+			for (j = 0; j < X; j++)
+				outfileI << I_population[j] << " ";
+			outfileI << endl;
+			outfileI.close();
+			
+			outfileH.open(filenameH, ios::app);
+			outfileH << heterozygosity.back() << " ";
+			outfileH.close();
+
 		}
 
 	}
 
+
+	
 
 	cin >> a;
 }
