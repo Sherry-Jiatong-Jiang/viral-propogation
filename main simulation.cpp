@@ -268,8 +268,15 @@ int main()
 			for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
 			{
 				//randomly pick one phage
-				srand(time(NULL));
-				total_phage_index = rand() % total_phage_size + 1;
+				/*srand(time(NULL));
+				total_phage_index = rand() % total_phage_size + 1;*/
+
+				random_device rd;
+				mt19937 e{ rd() }; // or std::default_random_engine e{rd()};
+				uniform_int_distribution<int> dist{ 1, total_phage_size};
+				// get random numbers with:
+				total_phage_index = dist(e);
+
 				a = total_phage_index;
 				//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
 				for (j = 0; j < X; j++)
@@ -302,8 +309,15 @@ int main()
 		for (k = 0; k < infect_B_number; k++)
 		{
 			//randomly pick one phage
-			srand(time(NULL));
-			total_phage_index = rand() % total_phage_size + 1;
+			/*srand(time(NULL));
+			total_phage_index = rand() % total_phage_size + 1;*/
+
+			random_device rd;
+			mt19937 e{ rd() }; // or std::default_random_engine e{rd()};
+			uniform_int_distribution<int> dist{ 1, total_phage_size};
+			// get random numbers with:
+			total_phage_index = dist(e);
+
 			a = total_phage_index;
 			//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
 			for (j = 0; j < X; j++)
@@ -320,8 +334,14 @@ int main()
 			//randomly pick one bacterium from the same deme if bacteria exist in that deme
 			if ((*demesB[j]).size() > 0)
 			{
-				srand(time(NULL));
-				bacterium_index = rand() % (*demesB[j]).size();
+				/*srand(time(NULL));
+				bacterium_index = rand() % (*demesB[j]).size();*/
+
+				random_device rd;
+				mt19937 e{ rd() }; // or std::default_random_engine e{rd()};
+				uniform_int_distribution<int> dist{ 0, (*demesB[j]).size() - 1 };
+				// get random numbers with:
+				bacterium_index = dist(e);
 
 				//if infecting uninfected bacteria:
 				if ((*((*demesB[j])[bacterium_index])).infected == false)
@@ -349,7 +369,7 @@ int main()
 			for (k = 0; k < migration_number; k++)
 			{
 				//randomly pick one phage
-				srand(time(NULL));
+				srand(time(NULL));	//haven't updated random generators in this section (if swap ==true) of the code yet.....................
 				total_phage_index = rand() % total_phage_size + 1;
 				a = total_phage_index;
 				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
@@ -366,8 +386,13 @@ int main()
 
 
 				//randomly pick another phage from the same deme, two more from neighbouring demes (deal with repeat????????)
-				srand(time(NULL));
-				phage_index = rand() % (*demesP[j]).size();
+				/*srand(time(NULL));
+				phage_index = rand() % (*demesP[j]).size();*/
+				random_device rd;
+				mt19937 e{ rd() }; // or std::default_random_engine e{rd()};
+				uniform_int_distribution<int> dist{ 0, (*demesP[j]).size() - 1 };
+				// get random numbers with:
+				phage_index = dist(e);
 
 				//deal with holes ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
 
@@ -402,8 +427,18 @@ int main()
 			for (k = 0; k < migration_number; k++)
 			{
 				//randomly pick one phage
-				srand(time(NULL));
-				total_phage_index = rand() % total_phage_size + 1;
+				/*srand(time(NULL));
+				total_phage_index = rand() % total_phage_size + 1;*/
+
+				//randomly pick one phage
+				random_device rd;
+				mt19937 e{ rd() }; // or std::default_random_engine e{rd()};
+				uniform_int_distribution<int> dist{ 1, total_phage_size};
+
+				// get random numbers with:
+				total_phage_index = dist(e);
+
+
 				a = total_phage_index;
 				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
 				for (j = 0; j < X; j++)
@@ -479,7 +514,7 @@ int main()
 					uniform_int_distribution<int> dist{ 0, 1 };
 
 					// get random numbers with:
-					dist(e);
+					direction = dist(e);
 
 
 
