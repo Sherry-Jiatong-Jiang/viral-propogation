@@ -6,7 +6,7 @@
 #include <vector>
 #include <ctime>	//for time(NULL) in random seed 
 #include <random>	//for random device
-
+#include <string>	//for "cout ambiguous" error
 using namespace std;
 
 int main()
@@ -16,9 +16,11 @@ int main()
 	double dx = 0.1;	//unit deme length (mm)
 	int tao = 5;	//(lysis time / tstep)
 	int burst_size = 500;	//20-50
-	int X = 200, N = 1000, Np = N * burst_size;//max demes, max bacteria, and max phages max phages where applicable????????????????
+	const int X = 200;	//max demes, constant to be used to initialize array size later
+	int N = 1000, Np = N * burst_size;//max bacteria, and max phages max phages where applicable????????????????
 	int N0 = 1000;		//initial phage numbers in the 1st deme
-	int simulation_steps = 2000;	//total simulation steps (total time/dt)
+	const int labels = 10;	// << X for current initialization scheme! number of initial different gene labels, constant to be used to initialize array size later
+	const int simulation_steps = 100;	//total simulation steps (total time/dt)
 	int visualization_steps = 5;	//how many steps before each output on the screen
 
 	bool swap = false;	//if swap is true, use swapping scheme (swapping phages and holes); if false, use random move scheme for phages. 
@@ -30,13 +32,15 @@ int main()
 	double qiB = 0.01;	//infecting uninfected bacteria probs
 	double pmigra = 0.005;	//migration probability (to both sides)
 
+	//parameters relating to output
 	vector <int> P_population(X);	//output of phage population distribution
 	vector <int> IB_population(X);	//output of total bacteria population distribution
 	vector <int> B_population(X);	//output of uninfected bacteria population distribution
 	vector <int> I_population(X);	//output of infected bacteria population distribution
-
-	//vector <int> output_labels;	//temporary outputof phage genetic label distribution
-	//double heterozygosity;	//to characterise genetic diversity at the wave front
+	double label_proportion[labels][X] = {};//output of proportional distribution of each label within each deme, and initialize to zeroes ([0] corresponding to label 1 etc)
+	int tot = 0;	//temporary storage of total phage population at each timestep 
+	double label_frequency[labels] = {};	//each element corresponds to the total frequency of a label withinin the whole population, to be used in the calculation of heterozygosity.
+	double heterozygosity [simulation_steps + 1] = {};	//array to characterise genetic diversity at the wave front
 
 	//intermediate parameters
 	int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
@@ -78,21 +82,30 @@ int main()
 	for (i = 0; i < X; i++)
 	{
 		demesP[i] = new vector<Phage*>;	//X demes of phages in total
-		if (i == 0)
+		if (i < labels)
 		{
-			for (j = 0; j < round(N0 / 2); j++)	//N0 phages in the 1st deme, 0 otherwise, initially. labels to be initialized as below
+			//for (j = 0; j < round(N0 / 2); j++)	//N0 phages in the 1st deme, 0 otherwise, initially. labels to be initialized as below
+			//{
+			//	(*demesP[i]).push_back(new Phage);
+			//	(*demesP[i])[j]->label = 1;
+			//	(*demesP[i])[j]->pmigra = pmigra;
+			//	(*demesP[i])[j]->qd = qd;
+			//	(*demesP[i])[j]->qiB = qiB;
+			//	(*demesP[i])[j]->qiI = qiI;
+			//}
+			//for (j = round(N0 / 2); j < N0; j++)
+			//{
+			//	(*demesP[i]).push_back(new Phage);
+			//	(*demesP[i])[j]->label = 2;
+			//	(*demesP[i])[j]->pmigra = pmigra;
+			//	(*demesP[i])[j]->qd = qd;
+			//	(*demesP[i])[j]->qiB = qiB;
+			//	(*demesP[i])[j]->qiI = qiI;
+			//}
+			for (j = 0; j < N0; j++)	
 			{
 				(*demesP[i]).push_back(new Phage);
-				(*demesP[i])[j]->label = 1;
-				(*demesP[i])[j]->pmigra = pmigra;
-				(*demesP[i])[j]->qd = qd;
-				(*demesP[i])[j]->qiB = qiB;
-				(*demesP[i])[j]->qiI = qiI;
-			}
-			for (j = round(N0 / 2); j < N0; j++)
-			{
-				(*demesP[i]).push_back(new Phage);
-				(*demesP[i])[j]->label = 2;
+				(*demesP[i])[j]->label = i + 1;
 				(*demesP[i])[j]->pmigra = pmigra;
 				(*demesP[i])[j]->qd = qd;
 				(*demesP[i])[j]->qiB = qiB;
@@ -114,6 +127,7 @@ int main()
 		P_population[j] = (*demesP[j]).size();
 		IB_population[j] = (*demesB[j]).size();
 		I_population[j] = 0;
+
 		for (k = 0; k < (*demesB[j]).size(); k++)
 		{
 			if ((*demesB[j])[k]->infected == true)
@@ -121,17 +135,72 @@ int main()
 				I_population[j] += 1;
 			}
 		}
+		
 		B_population[j] = IB_population[j] - I_population[j];
+		
+		for (k = 0; k < (*demesP[j]).size(); k++)
+		{
+			for (i = 0; i < labels; i++)
+			{
+				if ((*demesP[j])[k]->label == i + 1)	//+1 because actual label is greater than index.(start from 0 and 1) 
+				{
+					label_proportion[i][j] += 1;
+				}
+			}
+		}
+		
+		
+	}
+	//calculate heterozygosity before dividing labels into proportions!
+	tot = 0;
+	for (k = 0; k < labels; k++)
+	{
+		label_frequency[k] = 0;
+	}
+	for (j = 0; j < X; j++)
+	{
+		tot += P_population[j];
+	}
+	for (k = 0; k < labels; k++)
+	{
+		for (j = 0; j < X; j++)
+		{
+			label_frequency[k] += label_proportion[k][j];
+		}
+		label_frequency[k] /= tot;
+	}
+	for (k = 0; k < labels; k++)
+	{
+		heterozygosity[0] += label_frequency[k] * (1 - label_frequency[k]);
 	}
 
+	//calcalate real label_proportions
+	for (j = 0; j < X; j++)
+	{
+		for (w = 0; w < labels; w++)
+		{
+			if (P_population[j] != 0)
+			{
+				label_proportion[w][j] = label_proportion[w][j] / P_population[j];	//why 1.001?????????????????????????????
+			}
+		}
+	}
+	cout.precision(2);
+	cout << "/n";
 	cout << "Current simulation step: " << 0 << endl;
 	cout << "Phage population within each deme: " << P_population << endl;
 	cout << "Uninfected Bacteria population within each deme: " << B_population << endl;
 	cout << "Infected Bacteria population within each deme: " << I_population << endl;
-	//cout << "phage 3 label:" << (*((*demesP[0])[3])).label;
-	//cout << "Gene label with the largest frequency within each deme: " << output_labels << endl;
-	//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
-	//cin >> a;
+	for (k = 0; k < labels; k++)	//reduce this section after making code modular??????????????????????????
+	{
+		cout << "Label " << k + 1 << " proportion within each deme: ";
+		for (j = 0; j < X; j++)
+		{
+			cout << label_proportion[k][j] << ", ";
+		}
+		cout << endl;
+	}
+	cout << "Heterozygosity within current frame: " << heterozygosity[0] << endl;
 
 
 
@@ -167,7 +236,7 @@ int main()
 				for (k = 0; k < burst_size; k++)	//make this faster??????????????????????????
 				{
 					(*demesP[h]).push_back(new Phage);
-					(*demesP[h]).back()->label = label;
+					(*demesP[h]).back()->label = label;	//same label as the infected bacteria
 					(*demesP[h]).back()->pmigra = pmigra;
 					(*demesP[h]).back()->qd = qd;
 					(*demesP[h]).back()->qiB = qiB;
@@ -453,7 +522,16 @@ int main()
 		/*temporary output*/
 
 		if ((i + 1) % visualization_steps == 0)
-		{
+		{	
+			//reinitialize label_proportion every time
+			for (j = 0; j < demesP.size(); j++)
+			{
+				for (w = 0; w < labels; w++)
+				{
+					label_proportion[w][j] = 0;
+				}
+			}
+
 			for (j = 0; j < demesP.size(); j++)
 			{
 				P_population[j] = (*demesP[j]).size();
@@ -467,13 +545,69 @@ int main()
 					}
 				}
 				B_population[j] = IB_population[j] - I_population[j];
+				//calculate label population
+				for (k = 0; k < (*demesP[j]).size(); k++)
+				{
+					for (w = 0; w < labels; w++)
+					{
+						if ((*demesP[j])[k]->label == w + 1)	//+1 because actual label is greater than index.(start from 0 and 1) 
+						{
+							label_proportion[w][j] += 1;
+							break;
+						}
+					}
+				}
+
+			}
+
+			//calculate heterozygosity before dividing labels into proportions!
+			tot = 0;
+			for (k = 0; k < labels; k++)
+			{
+				label_frequency[k] = 0;
+			}
+			for (j = 0; j < X; j++)
+			{
+				tot += P_population[j];
+			}
+			for (k = 0; k < labels; k++)
+			{
+				for (j = 0; j < X; j++)
+				{
+					label_frequency[k] += label_proportion[k][j];
+				}
+				label_frequency[k] /= tot;
+			}
+			for (k = 0; k < labels; k++)
+			{
+				heterozygosity[i + 1] += label_frequency[k] * (1 - label_frequency[k]);
+			}
+
+			//calcalate real label_proportions
+			for (j = 0; j < X; j++)
+			{
+				for (w = 0; w < labels; w++)
+				{
+					if (P_population[j] != 0)
+					{
+						label_proportion[w][j] = label_proportion[w][j] / P_population[j];
+					}
+				}
 			}
 			cout << "Current simulation step: " << i + 1 << endl;
 			cout << "Phage population within each deme: " << P_population << endl;
 			cout << "Uninfected bacteria population within each deme: " << B_population << endl;
 			cout << "Infected bacteria population within each deme: " << I_population << endl;
-			//cout << "Gene label with the largest frequency within each deme: " << output_labels << endl;
-			//cout << "Heterozygosity within current frame: " << heterozygosity << endl;
+			for (k = 0; k < labels; k++)	//reduce this section after making code modular???????????????????????????????
+			{
+				cout << "Label " << k + 1 << " proportion within each deme: ";
+				for (j = 0; j < X; j++)
+				{
+					 cout << label_proportion[k][j] << ", ";
+				}
+				cout << endl;
+			}	
+			cout << "Heterozygosity within current frame: " << heterozygosity[i + 1] << endl;
 		}
 
 	}
