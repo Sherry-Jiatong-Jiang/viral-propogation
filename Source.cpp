@@ -39,7 +39,7 @@ string filenameP = "Psim001.dat";
 //string filenameB = "Bsim001.dat";
 //string filenameI = "Isim001.dat";
 string filenameH = "Hsim001.dat";
-string filenameL = "Lsin001.dat";
+string filenameL = "Lsim001.dat";
 
 //random seed for sequence of random generators
 unsigned int seed = 0;
@@ -55,7 +55,7 @@ int N0 = 10;		//initial phage numbers in the 1st deme
 
 const int simulation_steps = 100;	//total simulation steps (total time/dt)
 const int visualization_steps = 1;	//how many steps before each output on the screen
-int labelling_step = 5;	//how many steps to reach equilibrium before labelling phages
+int labelling_step = 1;	//how many steps to reach equilibrium before labelling phages
 const int labels = 10;	// << X for current initialization scheme! number of initial different gene labels, constant to be used to initialize array size later
 
 bool swapScheme = false;	//if swap is true, use swapping scheme (swapping phages and holes); if false, use random move scheme for phages. 
@@ -63,9 +63,9 @@ bool swapScheme = false;	//if swap is true, use swapping scheme (swapping phages
 
 //phage probs parameters (per timestep)
 double qd = 0;	//death probs
-double qiI = 0.01;	//infecting infected bacteria probs
-double qiB = 0.01;	//infecting uninfected bacteria probs
-double pmigra = 0.005;	//migration probability (to both sides)
+double qiI = 0.1;	//infecting infected bacteria probs
+double qiB = 0.1;	//infecting uninfected bacteria probs
+double pmigra = 0.1;	//migration probability (to both sides)
 
 //parameters relating to output
 vector <int> P_population(X);	//output of phage population distribution
@@ -252,7 +252,7 @@ int main()
 		/*if at equilibrium, label phages*/
 		if (i == labelling_step)
 		{
-			for (k = 0; k < labels; i++)
+			for (k = 0; k < labels; k++)
 			{
 				for (j = 0; j < (*demesP[k]).size(); j++)
 				{
@@ -277,32 +277,36 @@ int main()
 		//create new phages, and delete lysed bacteria from object storage & from infectionTime & from demesB! 
 		//(not the other way round which causes memory leak!)
 		int s = (*(infectionTime.back())).size();
-
+		
 		if ((*infectionTime.back()).size() != 0)
 		{
 			for (j = 0; j < s; j++)
-			{
-				int label = (*infectionTime.back())[j]->label;
-				int h = (*infectionTime.back())[j]->demeIndex;
+			{ 
+				{
+					int label = (*infectionTime.back())[j]->label;
+					int h = (*infectionTime.back())[j]->demeIndex;
 
-				//create new phages
-				for (k = 0; k < burst_size; k++)	//make this faster??????????????????????????
-				{
-					(*demesP[h]).push_back(new Phage);
-					(*demesP[h]).back()->label = label;	//same label as the infected bacteria
-					(*demesP[h]).back()->pmigra = pmigra;
-					(*demesP[h]).back()->qd = qd;
-					(*demesP[h]).back()->qiB = qiB;
-					(*demesP[h]).back()->qiI = qiI;
-				}
-				//delete lysed bacteria from object storage & from demesB
-				//first find bacteria coordinate
-				for (k = 0; k < (*demesB[h]).size(); k++)
-				{
-					if ((*demesB[h])[k] == (*infectionTime.back())[j])
+					//create new phages
+
+					for (k = 0; k < burst_size; k++)	//make this faster??????????????????????????
 					{
-						delete (*demesB[h])[k];
-						(*demesB[h]).erase((*demesB[h]).begin() + k);
+						(*demesP[h]).push_back(new Phage);
+						(*demesP[h]).back()->label = label;	//same label as the infected bacteria
+						(*demesP[h]).back()->pmigra = pmigra;
+						(*demesP[h]).back()->qd = qd;
+						(*demesP[h]).back()->qiB = qiB;
+						(*demesP[h]).back()->qiI = qiI;
+					}
+
+					//delete lysed bacteria from object storage & from demesB
+					//first find bacteria coordinate
+					for (k = 0; k < (*demesB[h]).size(); k++)
+					{
+						if ((*demesB[h])[k] == (*infectionTime.back())[j])
+						{
+							delete (*demesB[h])[k];
+							(*demesB[h]).erase((*demesB[h]).begin() + k);
+						}
 					}
 				}
 			}
@@ -313,46 +317,46 @@ int main()
 
 
 
-		/*die*/
+		///*die*/
 
-		try
-		{
-			death_number = round(qd * total_phage_size);
-			for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
-			{
-				//randomly pick one phage
-				/*srand(time(NULL));
-				total_phage_index = rand() % total_phage_size + 1;*/
-
-
-				uniform_int_distribution<int> dist1{ 1, total_phage_size };
-				// get random numbers with:
-				total_phage_index = dist1(e);
-
-				a = total_phage_index;
-				//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
-				for (j = 0; j < X; j++)
-				{
-					a = a - (*demesP[j]).size();
-					if (a <= 0)
-					{
-						b = (*demesP[j]).size() + a;
-						b = b - 1;
-						break;
-					}
-				}
-				delete (*demesP[j])[b];
-				//if (b < (*demesP[j]).size())
-				{(*demesP[j]).erase((*demesP[j]).begin() + b); }
-				total_phage_size = total_phage_size - 1;
-			}
+		//try
+		//{
+		//	death_number = round(qd * total_phage_size);
+		//	for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
+		//	{
+		//		//randomly pick one phage
+		//		/*srand(time(NULL));
+		//		total_phage_index = rand() % total_phage_size + 1;*/
 
 
-		}
-		catch (exception& e)
-		{
-			cout << "Standard exception: " << e.what() << endl;
-		}
+		//		uniform_int_distribution<int> dist1{ 1, total_phage_size };
+		//		// get random numbers with:
+		//		total_phage_index = dist1(e);
+
+		//		a = total_phage_index;
+		//		//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
+		//		for (j = 0; j < X; j++)
+		//		{
+		//			a = a - (*demesP[j]).size();
+		//			if (a <= 0)
+		//			{
+		//				b = (*demesP[j]).size() + a;
+		//				b = b - 1;
+		//				break;
+		//			}
+		//		}
+		//		delete (*demesP[j])[b];
+		//		//if (b < (*demesP[j]).size())
+		//		{(*demesP[j]).erase((*demesP[j]).begin() + b); }
+		//		total_phage_size = total_phage_size - 1;
+		//	}
+
+
+		//}
+		//catch (exception& e)
+		//{
+		//	cout << "Standard exception: " << e.what() << endl;
+		//}
 
 
 		/*infect uninfected and infected bacteria*/
@@ -425,6 +429,7 @@ int main()
 
 				uniform_int_distribution<int> dista{ 1, total_phage_size };
 				total_phage_index = dista(e);
+
 				a = total_phage_index;
 				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
 				for (j = 0; j < X; j++)
@@ -498,7 +503,7 @@ int main()
 
 				// get random numbers with:
 				total_phage_index = dist4(e);
-
+				//cout << total_phage_index << endl;
 
 				a = total_phage_index;
 				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
@@ -521,18 +526,6 @@ int main()
 				//if in the last deme, create new deme
 				else if (j == X - 1)
 				{
-					demesP.push_back(new vector<Phage*>);
-					demesB.push_back(new vector<Bacterium*>);
-					for (k = 0; k < N; k++)
-					{
-						(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
-						(*demesB[j + 1])[k]->infected = false;
-						(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep original deme index as attribute, not to be changed when frame moves.
-						(*demesB[j + 1])[k]->label = 0;
-						(*demesB[j + 1])[k]->lysed = false;
-						(*demesB[j + 1])[k]->ts_after_infection = 0;
-						(*demesB[j + 1])[k]->burst_size = burst_size;
-					}
 
 					////randomly choose to move to the left or the right (1: left; 0: right)
 					//srand(time(NULL));
@@ -545,7 +538,7 @@ int main()
 					// get random numbers with:
 					direction = dist5(e);
 
-					cout << direction << endl;
+					//cout << direction << endl;
 
 					if (direction == 1)
 					{
@@ -554,12 +547,54 @@ int main()
 					}
 					else
 					{
+						//create new deme if moving to the right.
+						demesP.push_back(new vector<Phage*>);
+						demesB.push_back(new vector<Bacterium*>);
+						for (k = 0; k < N; k++)
+						{
+							(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
+							(*demesB[j + 1])[k]->infected = false;
+							(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep original deme index as attribute, not to be changed when frame moves.
+							(*demesB[j + 1])[k]->label = 0;
+							(*demesB[j + 1])[k]->lysed = false;
+							(*demesB[j + 1])[k]->ts_after_infection = 0;
+							(*demesB[j + 1])[k]->burst_size = burst_size;
+						}
+
+
+
 						(*demesP[j + 1]).push_back((*demesP[j])[b]);
 						(*demesP[j]).erase((*demesP[j]).begin() + b);
+
+						
+						//delete first deme (only at the end in order not to mess up with indexes).
+						total_phage_size -= (*demesP[0]).size();
+
+						for (k = 0; k < tao; k++)
+						{
+							for (j = 0; j < (*infectionTime[k]).size(); j++)
+							{
+								if ((*infectionTime[k])[j]->demeIndex == 0)
+								{
+
+								}
+							}
+						}
+
+						for (k = 0; k < (*demesP[0]).size(); k++)
+						{
+							delete (*demesP[0])[k];
+						}
+						for (k = 0; k < (*demesB[0]).size(); k++)
+						{
+							delete (*demesB[0])[k];
+						}
+						delete demesP[0];
+						delete demesB[0];
+						demesP.erase(demesP.begin());
+						demesB.erase(demesB.begin());
 					}
-					//delete first deme (only at the end in order not to mess up with indexes).
-					demesP.erase(demesP.begin());
-					demesB.erase(demesB.begin());
+					
 				}
 				else
 				{
@@ -574,8 +609,7 @@ int main()
 
 					// get random numbers with:
 					direction = dist6(e);
-
-
+					
 
 					if (direction == 1)
 					{
@@ -722,7 +756,7 @@ int main()
 					{
 						outfileL << label_proportion[k][j] << " ";
 					}
-					cout << endl;
+					outfileL << endl;
 				}
 				outfileL.close();
 

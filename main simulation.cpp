@@ -20,7 +20,7 @@ string filenameP = "Psim001.dat";
 //string filenameB = "Bsim001.dat";
 //string filenameI = "Isim001.dat";
 string filenameH = "Hsim001.dat";
-string filenameL = "Lsin001.dat";
+string filenameL = "Lsim001.dat";
 
 //random seed for sequence of random generators
 unsigned int seed = 0;
@@ -233,7 +233,7 @@ int main()
 		/*if at equilibrium, label phages*/
 		if (i == labelling_step)
 		{
-			for (k = 0; k < labels; i++)
+			for (k = 0; k < labels; k++)
 			{
 				for (j = 0; j < (*demesP[k]).size(); j++)
 				{
@@ -702,7 +702,7 @@ int main()
 					{
 						outfileL << label_proportion[k][j] << " ";
 					}
-					cout << endl;
+					outfileL << endl;
 				}
 				outfileL.close();
 
