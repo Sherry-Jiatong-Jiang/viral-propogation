@@ -33,13 +33,14 @@ public:
   int y(); 
 
   int demeIndex;
+  int initFramePos;
  // int indexInDeme;
   int burst_size;
   int label;
   int ts_after_infection;
   bool infected;
   bool lysed;
-  Bacterium() : label(0), infected(false), lysed(false), ts_after_infection(0), burst_size(500), demeIndex(0) {}
+  Bacterium() : label(0), infected(false), lysed(false), ts_after_infection(0), burst_size(500), demeIndex(0), initFramePos(0){}
 };
 
 

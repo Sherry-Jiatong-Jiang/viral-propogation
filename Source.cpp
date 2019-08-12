@@ -81,6 +81,7 @@ vector<double> heterozygosity;	//of size (simulation_steps / visualization_steps
 int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
 int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
 int direction = 0;
+int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
 
 Phage* temp;
 
@@ -111,6 +112,7 @@ int main()
 			(*demesB[i]).push_back(new Bacterium);	//N bacteria per deme initially
 			(*demesB[i])[j]->infected = false;
 			(*demesB[i])[j]->demeIndex = i;
+			(*demesB[i])[j]->initFramePos = FramePos;
 			//(*demesB[i])[j]->indexInDeme = j;
 			(*demesB[i])[j]->label = 0;
 			(*demesB[i])[j]->lysed = false;
@@ -282,9 +284,9 @@ int main()
 		{
 			for (j = 0; j < s; j++)
 			{ 
-				{
+				
 					int label = (*infectionTime.back())[j]->label;
-					int h = (*infectionTime.back())[j]->demeIndex;
+					int h = (*infectionTime.back())[j]->demeIndex - (FramePos - (*infectionTime.back())[j]->initFramePos);
 
 					//create new phages
 
@@ -296,19 +298,30 @@ int main()
 						(*demesP[h]).back()->qd = qd;
 						(*demesP[h]).back()->qiB = qiB;
 						(*demesP[h]).back()->qiI = qiI;
+						cout << "k1 " << k;
+						cout << endl;
+						
 					}
 
 					//delete lysed bacteria from object storage & from demesB
 					//first find bacteria coordinate
+					w = 0;
 					for (k = 0; k < (*demesB[h]).size(); k++)
 					{
-						if ((*demesB[h])[k] == (*infectionTime.back())[j])
+						w ++;
+						if ((*demesB[h])[w-1] == (*infectionTime.back())[j])
 						{
-							delete (*demesB[h])[k];
-							(*demesB[h]).erase((*demesB[h]).begin() + k);
+							w --;
+							delete (*demesB[h])[w];
+							(*demesB[h]).erase((*demesB[h]).begin() + w);
 						}
+						cout << "k2 " << k;
 					}
-				}
+					cout << endl;
+					cout << "h" << s;
+					cout << endl;
+					
+				
 			}
 		}
 		//delete the last element in infectionTime vector and the vector it points to
@@ -554,7 +567,8 @@ int main()
 						{
 							(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
 							(*demesB[j + 1])[k]->infected = false;
-							(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep original deme index as attribute, not to be changed when frame moves.
+							(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep relative deme index in the wave front as attribute.
+							(*demesB[j + 1])[k]->initFramePos = FramePos;	//keep track of the front absolute position at the time new deme is initialized, to be able to recover absolute deme index later.
 							(*demesB[j + 1])[k]->label = 0;
 							(*demesB[j + 1])[k]->lysed = false;
 							(*demesB[j + 1])[k]->ts_after_infection = 0;
@@ -572,18 +586,23 @@ int main()
 
 						for (k = 0; k < tao; k++)
 						{
+							w = 0;
 							for (j = 0; j < (*infectionTime[k]).size(); j++)
 							{
-								if ((*infectionTime[k])[j]->demeIndex == 0)
+								w++;
+								if ((*infectionTime[k])[w-1]->demeIndex - (FramePos - (*infectionTime[k])[w-1]->initFramePos) == 0)
 								{
-
+									w --;
+									(*infectionTime[k]).erase((*infectionTime[k]).begin() + w);
 								}
+								cout << w;
 							}
 						}
 
 						for (k = 0; k < (*demesP[0]).size(); k++)
 						{
 							delete (*demesP[0])[k];
+							cout << (*demesP[0])[k];
 						}
 						for (k = 0; k < (*demesB[0]).size(); k++)
 						{
@@ -595,6 +614,9 @@ int main()
 						demesB.erase(demesB.begin());
 					}
 					
+					FramePos++;
+					
+					cout << "FramePos: " << FramePos << endl;
 				}
 				else
 				{

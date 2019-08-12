@@ -62,6 +62,8 @@ vector<double> heterozygosity;	//of size (simulation_steps / visualization_steps
 int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
 int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
 int direction = 0;
+int forward_steps = 0;	//keeps track of how many demes the frame has moved forward by.
+
 
 Phage* temp;
 
@@ -508,7 +510,7 @@ int main()
 					{
 						(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
 						(*demesB[j + 1])[k]->infected = false;
-						(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep original deme index as attribute, not to be changed when frame moves.
+						(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep absolute deme index as attribute, not to be changed when frame moves.
 						(*demesB[j + 1])[k]->label = 0;
 						(*demesB[j + 1])[k]->lysed = false;
 						(*demesB[j + 1])[k]->ts_after_infection = 0;
