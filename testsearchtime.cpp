@@ -11,7 +11,7 @@
 
 using namespace std;
 
-ifstream initfile;
+//ifstream initfile;
 
 ofstream outfileP;
 ofstream outfileH;
@@ -20,18 +20,23 @@ ofstream outfileL;
 string initfilename = "init.txt";
 
 
+const int calX(int x)
+{
+	const int y = x;
+	return y;
+}
+
+
 int main()
 {
 	
-	/*parameters to be read from init file*/
+	/*parameters whose final values will be read from init file */
 
 	string filenameP = "Psim001.dat";	//must be different everytime! otherwise will always append to previous file.
 	string filenameH = "Hsim001.dat";
 	string filenameL = "Lsim001.dat";
-
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
-
 	//system parameters
 	double dt = 100;   //time (sec) per simulation step
 	double dx = 0.1;	//unit deme length (mm)
@@ -41,76 +46,86 @@ int main()
 	int N = 1000, Np = N * burst_size;//max bacteria, and max phages max phages where applicable????????????????
 	int N0 = 100;		//initial phage numbers in the each deme
 	int Nx = 10;	//initial number of demes which have phages
-
 	int simulation_steps = 4000;	//total simulation steps (total time/dt)
 	int visualization_steps = 10;	//how many steps before each output on the screen
 	int labelling_step = 2000;	//how many steps to reach equilibrium before labelling phages
-
 	//phage probs parameters (per timestep)
 	double qd = 0;	//death probs
 	double qiI = 0.01;	//infecting infected bacteria probs
 	double qiB = 0.01;	//infecting uninfected bacteria probs
-	double pmigra = 0.05;	//migration probability (to both sides)
+	double pmigra;	//migration probability (to both sides)
 
 
 	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
-	string paraName;
+	//string paraName;
 
-
-	initfile.open(initfilename, ios::in);
+	/*initfile.open(initfilename, ios::in);
 	for (j = 0; j < 19; j++)
 	{
-		initfile >> paraName;
-		if (paraName == "filenameP:")
-			initfile >> filenameP;
-		else if (paraName == "filenameH:")
-			initfile >> filenameH;
-		else if (paraName == "filenameL:")
-			initfile >> filenameL;
-		else if (paraName == "seed:")
-			initfile >> seed;
-		else if (paraName == "dt:")
-			initfile >> dt;
-		else if (paraName == "dx:")
-			initfile >> dx;
-		else if (paraName == "tao:")
-			initfile >> tao;
-		else if (paraName == "burst_size:")
-			initfile >> burst_size;
-		else if (paraName == "X:")
-			initfile >> X;
-		else if (paraName == "N:")
-			initfile >> N;
-		else if (paraName == "N0:")
-			initfile >> N0;
-		else if (paraName == "Nx:")
-			initfile >> Nx;
-		else if (paraName == "simulation_steps:")
-			initfile >> simulation_steps;
-		else if (paraName == "visualization_steps:")
-			initfile >> visualization_steps;
-		else if (paraName == "labelling_step:")
-			initfile >> labelling_step;
-		else if (paraName == "qd:")
-			initfile >> qd;
-		else if (paraName == "qiI:")
-			initfile >> qiI;
-		else if (paraName == "qiB:")
-			initfile >> qiB;
-		else if (paraName == "pmigra:")
-			initfile >> pmigra;
-		else
+		try
 		{
-			cout << "INITFILE READING ERROR!" << endl;
-			cin >> paraName;
+			initfile >> paraName;
+			if (paraName == "filenameP:")
+			{
+				initfile >> filenameP;
+				std::cout << filenameP;
+			}
+			else if (paraName == "filenameH:")
+				initfile >> filenameH;
+			else if (paraName == "filenameL:")
+				initfile >> filenameL;
+			else if (paraName == "seed:")
+				initfile >> seed;
+			else if (paraName == "dt:")
+			{
+				initfile >> dt_;
+				std::cout << dt;
+			}
+			else if (paraName == "dx:")
+				initfile >> dx;
+			else if (paraName == "tao:")
+				initfile >> tao;
+			else if (paraName == "burst_size:")
+				initfile >> burst_size;
+			else if (paraName == "X:")
+				initfile >> X;
+			else if (paraName == "N:")
+				initfile >> N;
+			else if (paraName == "N0:")
+				initfile >> N0;
+			else if (paraName == "Nx:")
+				initfile >> Nx;
+			else if (paraName == "simulation_steps:")
+				initfile >> simulation_steps;
+			else if (paraName == "visualization_steps:")
+				initfile >> visualization_steps;
+			else if (paraName == "labelling_step:")
+				initfile >> labelling_step;
+			else if (paraName == "qd:")
+				initfile >> qd;
+			else if (paraName == "qiI:")
+				initfile >> qiI;
+			else if (paraName == "qiB:")
+				initfile >> qiB;
+			else if (paraName == "pmigra:")
+			{
+				initfile >> pmigra;
+				std::cout << pmigra;
+			}
+			else
+			{
+				std::cout << "INITFILE READING ERROR!" << endl;
+				cin >> paraName;
+			}
+		}
+		catch (exception& e)
+		{
+			std::cout << "Standard exception: " << e.what() << endl;
 		}
 
 	}
 	initfile.close();
-
-
-
-
+*/
 
 	
 
@@ -124,9 +139,9 @@ int main()
 	vector <int> IB_population(X);	//output of total bacteria population distribution
 	vector <int> B_population(X);	//output of uninfected bacteria population distribution
 	vector <int> I_population(X);	//output of infected bacteria population distribution
-	double label_proportion[labels][X] = {};//output of proportional distribution of each label within each deme, and initialize to zeroes ([0] corresponding to label 1 etc)
+	vector <vector<double>> label_proportion(labels);//output of proportional distribution of each label within each deme, and initialize to zeroes ([0] corresponding to label 1 etc)
 	int tot = 0;	//temporary storage of total phage population at each timestep 
-	double label_frequency[labels] = {};	//each element corresponds to the total frequency of a label withinin the whole population, to be used in the calculation of heterozygosity.
+	vector<double> label_frequency(labels);	//each element corresponds to the total frequency of a label withinin the whole population, to be used in the calculation of heterozygosity.
 	vector<double> heterozygosity;	//of size (simulation_steps / visualization_steps + 1), array to characterise genetic diversity at the wave front
 
 	//intermediate parameters
@@ -202,7 +217,15 @@ int main()
 	//}
 
 
-	//step 0 output showing initial distribution
+	/*step 0 output showing initial distribution*/
+
+	//initialize label_proportion vector dimension
+	vector <double> lab_prop(X);
+	for (j = 0; j < labels; j++)
+	{
+		label_proportion[j] = lab_prop;
+	}
+
 	for (j = 0; j < X; j++)
 	{
 		P_population[j] = (*demesP[j]).size();
@@ -267,8 +290,8 @@ int main()
 			}
 		}
 	}
-	cout.precision(2);
-	cout << "Current simulation step: " << 0 << endl;
+	std::cout.precision(2);
+	std::cout << "Current simulation step: " << 0 << endl;
 	//cout << "Phage population within each deme: " << P_population << endl;
 	//cout << "Uninfected Bacteria population within each deme: " << B_population << endl;
 	//cout << "Infected Bacteria population within each deme: " << I_population << endl;
@@ -407,7 +430,7 @@ int main()
 		}
 		catch (exception& e)
 		{
-			cout << "Standard exception: " << e.what() << endl;
+			std::cout << "Standard exception: " << e.what() << endl;
 		}
 
 
@@ -653,7 +676,7 @@ int main()
 					
 					FramePos++;
 					
-					cout << "FramePos: " << FramePos << endl;
+					std::cout << "FramePos: " << FramePos << endl;
 				}
 				else
 				{
@@ -792,13 +815,15 @@ int main()
 					}
 				}
 			}
-			cout << "Current simulation step: " << i + 1 << endl;
+			std::cout << "Current simulation step: " << i + 1 << endl;
 			/*cout << "Phage population within each deme: " << P_population << endl;
 			cout << "Uninfected bacteria population within each deme: " << B_population << endl;
 			cout << "Infected bacteria population within each deme: " << I_population << endl;*/
 
-
-			outfileP.open(filenameP, ios::app);
+			std::cout << "ffffff";
+			//outfileP.open(filenameP, ios::trunc);
+			outfileP.open(filenameP, ios::trunc);
+			
 			for (j = 0; j < X; j++)
 				outfileP << P_population[j] << " ";
 			outfileP << endl;
