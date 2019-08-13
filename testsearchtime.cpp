@@ -1,23 +1,4 @@
-//#include <iostream>
-//#include <random>
-//
-//using namespace std;
-//
-//int main()
-//{
-//	int b;
-//	random_device rd;
-//	mt19937 e{0}; // or std::default_random_engine e{rd()};
-//	
-//	uniform_int_distribution<int> dist1{ 0, 1 };
-//	cout << dist1(e) << endl;
-//	uniform_int_distribution<int> dist2{ 0, 100 };
-//	cout << dist2(e) << endl;
-//	
-//	cin >> b;
-//}
-
-#include "viral from stupid16.h"
+#include "testsearchtime.h"
 #include <iostream>
 #include <fstream>
 #include <cmath>	//for rounding
@@ -27,71 +8,147 @@
 //#include <ctime>	//for time(NULL) in random seed 
 #include <random>	//for random device and mt19937
 #include <string>	//for "cout ambiguous" error
+
 using namespace std;
 
+ifstream initfile;
 
 ofstream outfileP;
-//ofstream outfileB;
-//ofstream outfileI;
 ofstream outfileH;
 ofstream outfileL;
-string filenameP = "Psim001.dat";
-//string filenameB = "Bsim001.dat";
-//string filenameI = "Isim001.dat";
-string filenameH = "Hsim001.dat";
-string filenameL = "Lsim001.dat";
 
-//random seed for sequence of random generators
-unsigned int seed = 0;
-
-//system parameters
-double dt = 100;   //time (sec) per simulation step
-double dx = 0.1;	//unit deme length (mm)
-int tao = 50;	//(lysis time / tstep)
-int burst_size = 50;	//20-50
-const int X = 100;	//max demes, constant to be used to initialize array size later
-int N = 100, Np = N * burst_size;//max bacteria, and max phages max phages where applicable????????????????
-int N0 = 1000;		//initial phage numbers in the 1st deme
-
-const int simulation_steps = 1000;	//total simulation steps (total time/dt)
-const int visualization_steps = 5;	//how many steps before each output on the screen
-int labelling_step = 500;	//how many steps to reach equilibrium before labelling phages
-const int labels = X;	// << X for current initialization scheme! number of initial different gene labels, constant to be used to initialize array size later
-
-bool swapScheme = false;	//if swap is true, use swapping scheme (swapping phages and holes); if false, use random move scheme for phages. 
-//For both schemes, randomly choose right or left move, use poisson distribution for total number of phages to be randomly selected. 
-
-//phage probs parameters (per timestep)
-double qd = 0;	//death probs
-double qiI = 0.01;	//infecting infected bacteria probs
-double qiB = 0.01;	//infecting uninfected bacteria probs
-double pmigra = 0.005;	//migration probability (to both sides)
-
-//parameters relating to output
-vector <int> P_population(X);	//output of phage population distribution
-vector <int> IB_population(X);	//output of total bacteria population distribution
-vector <int> B_population(X);	//output of uninfected bacteria population distribution
-vector <int> I_population(X);	//output of infected bacteria population distribution
-double label_proportion[labels][X] = {};//output of proportional distribution of each label within each deme, and initialize to zeroes ([0] corresponding to label 1 etc)
-int tot = 0;	//temporary storage of total phage population at each timestep 
-double label_frequency[labels] = {};	//each element corresponds to the total frequency of a label withinin the whole population, to be used in the calculation of heterozygosity.
-vector<double> heterozygosity;	//of size (simulation_steps / visualization_steps + 1), array to characterise genetic diversity at the wave front
-
-//intermediate parameters
-int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
-int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
-int direction = 0;
-int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
-
-Phage* temp;
-
-vector <vector <Bacterium*>* > demesB(X);
-vector <vector <Phage*>* > demesP(X);
-vector <vector <Bacterium*>* > infectionTime(tao);
+string initfilename = "init.txt";
 
 
 int main()
 {
+	
+	/*parameters to be read from init file*/
+
+	string filenameP = "Psim001.dat";	//must be different everytime! otherwise will always append to previous file.
+	string filenameH = "Hsim001.dat";
+	string filenameL = "Lsim001.dat";
+
+	//random seed for sequence of random generators
+	unsigned int seed = 1;
+
+	//system parameters
+	double dt = 100;   //time (sec) per simulation step
+	double dx = 0.1;	//unit deme length (mm)
+	int tao = 50;	//(lysis time / tstep)
+	int burst_size = 50;	//20-50
+	int X = 100;	//max demes, constant to be used to initialize array size later
+	int N = 1000, Np = N * burst_size;//max bacteria, and max phages max phages where applicable????????????????
+	int N0 = 100;		//initial phage numbers in the each deme
+	int Nx = 10;	//initial number of demes which have phages
+
+	int simulation_steps = 4000;	//total simulation steps (total time/dt)
+	int visualization_steps = 10;	//how many steps before each output on the screen
+	int labelling_step = 2000;	//how many steps to reach equilibrium before labelling phages
+
+	//phage probs parameters (per timestep)
+	double qd = 0;	//death probs
+	double qiI = 0.01;	//infecting infected bacteria probs
+	double qiB = 0.01;	//infecting uninfected bacteria probs
+	double pmigra = 0.05;	//migration probability (to both sides)
+
+
+	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
+	string paraName;
+
+
+	initfile.open(initfilename, ios::in);
+	for (j = 0; j < 19; j++)
+	{
+		initfile >> paraName;
+		if (paraName == "filenameP:")
+			initfile >> filenameP;
+		else if (paraName == "filenameH:")
+			initfile >> filenameH;
+		else if (paraName == "filenameL:")
+			initfile >> filenameL;
+		else if (paraName == "seed:")
+			initfile >> seed;
+		else if (paraName == "dt:")
+			initfile >> dt;
+		else if (paraName == "dx:")
+			initfile >> dx;
+		else if (paraName == "tao:")
+			initfile >> tao;
+		else if (paraName == "burst_size:")
+			initfile >> burst_size;
+		else if (paraName == "X:")
+			initfile >> X;
+		else if (paraName == "N:")
+			initfile >> N;
+		else if (paraName == "N0:")
+			initfile >> N0;
+		else if (paraName == "Nx:")
+			initfile >> Nx;
+		else if (paraName == "simulation_steps:")
+			initfile >> simulation_steps;
+		else if (paraName == "visualization_steps:")
+			initfile >> visualization_steps;
+		else if (paraName == "labelling_step:")
+			initfile >> labelling_step;
+		else if (paraName == "qd:")
+			initfile >> qd;
+		else if (paraName == "qiI:")
+			initfile >> qiI;
+		else if (paraName == "qiB:")
+			initfile >> qiB;
+		else if (paraName == "pmigra:")
+			initfile >> pmigra;
+		else
+		{
+			cout << "INITFILE READING ERROR!" << endl;
+			cin >> paraName;
+		}
+
+	}
+	initfile.close();
+
+
+
+
+
+	
+
+
+	int labels = X;	// << X for current initialization scheme! number of initial different gene labels, constant to be used to initialize array size later
+	bool swapScheme = false;	//if swap is true, use swapping scheme (swapping phages and holes); if false, use random move scheme for phages. 
+	//For both schemes, randomly choose right or left move, use poisson distribution for total number of phages to be randomly selected. 
+
+	//parameters relating to output
+	vector <int> P_population(X);	//output of phage population distribution
+	vector <int> IB_population(X);	//output of total bacteria population distribution
+	vector <int> B_population(X);	//output of uninfected bacteria population distribution
+	vector <int> I_population(X);	//output of infected bacteria population distribution
+	double label_proportion[labels][X] = {};//output of proportional distribution of each label within each deme, and initialize to zeroes ([0] corresponding to label 1 etc)
+	int tot = 0;	//temporary storage of total phage population at each timestep 
+	double label_frequency[labels] = {};	//each element corresponds to the total frequency of a label withinin the whole population, to be used in the calculation of heterozygosity.
+	vector<double> heterozygosity;	//of size (simulation_steps / visualization_steps + 1), array to characterise genetic diversity at the wave front
+
+	//intermediate parameters
+	int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
+	int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
+	int direction = 0;
+	int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
+
+	Phage* temp;
+
+	vector <vector <Bacterium*>* > demesB(X);
+	vector <vector <Phage*>* > demesP(X);
+	//vector <vector <Bacterium*>* > infectionTime(tao);
+
+
+
+
+
+
+
+
+
 
 	//random_device rd;
 	mt19937 e{ seed }; // or std::default_random_engine e{rd()};
@@ -101,8 +158,6 @@ int main()
 	/*demesB and demesP are two vectors of initial size X storing pointers which point to
 	a group of vectors which represent demes of bacteria and phages respectively.
 	A vector of a deme of phages, e.g., contains pointers of phage objects.*/
-
-	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
 
 	for (i = 0; i < X; i++)
 	{
@@ -125,32 +180,17 @@ int main()
 	{
 		demesP[i] = new vector<Phage*>;	//X demes of phages in total
 
-			//for (j = 0; j < round(N0 / 2); j++)	//N0 phages in the 1st deme, 0 otherwise, initially. labels to be initialized as below
-			//{
-			//	(*demesP[i]).push_back(new Phage);
-			//	(*demesP[i])[j]->label = 1;
-			//	(*demesP[i])[j]->pmigra = pmigra;
-			//	(*demesP[i])[j]->qd = qd;
-			//	(*demesP[i])[j]->qiB = qiB;
-			//	(*demesP[i])[j]->qiI = qiI;
-			//}
-			//for (j = round(N0 / 2); j < N0; j++)
-			//{
-			//	(*demesP[i]).push_back(new Phage);
-			//	(*demesP[i])[j]->label = 2;
-			//	(*demesP[i])[j]->pmigra = pmigra;
-			//	(*demesP[i])[j]->qd = qd;
-			//	(*demesP[i])[j]->qiB = qiB;
-			//	(*demesP[i])[j]->qiI = qiI;
-			//}
-		for (j = 0; j < N0; j++)
+		if (i < Nx)
 		{
-			(*demesP[i]).push_back(new Phage);
-			(*demesP[i])[j]->label = 0;
-			(*demesP[i])[j]->pmigra = pmigra;
-			(*demesP[i])[j]->qd = qd;
-			(*demesP[i])[j]->qiB = qiB;
-			(*demesP[i])[j]->qiI = qiI;
+			for (j = 0; j < N0; j++)
+			{
+				(*demesP[i]).push_back(new Phage);
+				(*demesP[i])[j]->label = 0;
+				(*demesP[i])[j]->pmigra = pmigra;
+				(*demesP[i])[j]->qd = qd;
+				(*demesP[i])[j]->qiB = qiB;
+				(*demesP[i])[j]->qiI = qiI;
+			}
 		}
 
 	}
@@ -359,7 +399,6 @@ int main()
 					}
 				}
 				delete (*demesP[j])[b];
-				//if (b < (*demesP[j]).size())
 				{(*demesP[j]).erase((*demesP[j]).begin() + b); }
 				total_phage_size = total_phage_size - 1;
 			}
@@ -552,8 +591,6 @@ int main()
 					// get random numbers with:
 					direction = dist5(e);
 
-					//cout << direction << endl;
-
 					if (direction == 1)
 					{
 						(*demesP[j - 1]).push_back((*demesP[j])[b]);
@@ -725,7 +762,7 @@ int main()
 			heterozygosity.push_back(0);
 			for (k = 0; k < labels; k++)
 			{
-				label_frequency[k] = 0;
+				label_frequency[k] = 0;	//initialization
 			}
 			for (j = 0; j < X; j++)
 			{
