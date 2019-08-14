@@ -35,7 +35,7 @@ for i=1:3:n1
     ylabel('Population per deme');
      title((i-1)/3);
     
-    pause(.001);
+    pause(.0002);
 end
 
 figure (2);
