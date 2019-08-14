@@ -48,7 +48,7 @@ figure (3);
 
 % subplot(2,1,1);
 plot(t5,F2sim001);
-xlabel('Simulation step');
+xlabel('Visualization step');
 ylabel('unit: dx/dt');
 title('Front Position');
 
