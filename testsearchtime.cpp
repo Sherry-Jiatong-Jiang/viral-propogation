@@ -19,7 +19,7 @@ ofstream outfileL;
 ofstream outfileF1;
 ofstream outfileF2;
 
-string initfilename = "init.txt";
+string initfilename = "init001.txt";
 
 
 
