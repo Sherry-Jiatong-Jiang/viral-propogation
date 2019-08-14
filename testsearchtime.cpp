@@ -29,11 +29,11 @@ int main()
 	/*parameters whose final values will be read from init file */
 
 	//files that keep P, B, I populations, heterozygosity, labelling proportions, and framemoving steps and frame positions at each step.
-	string filenameP = "Psim001.dat";	//must be different everytime! otherwise will always append to previous file.
-	string filenameH = "Hsim001.dat";
-	string filenameL = "Lsim001.dat";
-	string filenameF1 = "F1sim001.dat";
-	string filenameF2 = "F2sim001.dat";
+	string filenameP = "sim001P.dat";	//must be different everytime! otherwise will always append to previous file.
+	string filenameH = "sim001H.dat";
+	string filenameL = "sim001L.dat";
+	string filenameF1 = "sim001F1.dat";
+	string filenameF2 = "sim001F2.dat";
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
 	//system parameters
