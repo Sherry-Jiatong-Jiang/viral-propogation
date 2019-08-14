@@ -16,6 +16,8 @@ ifstream initfile;
 ofstream outfileP;
 ofstream outfileH;
 ofstream outfileL;
+ofstream outfileF1;
+ofstream outfileF2;
 
 string initfilename = "init.txt";
 
@@ -26,9 +28,12 @@ int main()
 	
 	/*parameters whose final values will be read from init file */
 
+	//files that keep P, B, I populations, heterozygosity, labelling proportions, and framemoving steps and frame positions at each step.
 	string filenameP = "Psim001.dat";	//must be different everytime! otherwise will always append to previous file.
 	string filenameH = "Hsim001.dat";
 	string filenameL = "Lsim001.dat";
+	string filenameF1 = "F1sim001.dat";
+	string filenameF2 = "F2sim001.dat";
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
 	//system parameters
@@ -38,7 +43,7 @@ int main()
 	int burst_size = 50;	//20-50
 	int X = 100;	//max demes, constant to be used to initialize array size later
 	int N = 1000, Np = N * burst_size;//max bacteria, and max phages max phages where applicable????????????????
-	int N0 = 100;		//initial phage numbers in the each deme
+	int N0 = 1000;		//initial phage numbers in the each deme
 	int Nx = 10;	//initial number of demes which have phages
 	int simulation_steps = 4000;	//total simulation steps (total time/dt)
 	int visualization_steps = 10;	//how many steps before each output on the screen
@@ -54,7 +59,7 @@ int main()
 	string paraName;
 
 	initfile.open(initfilename, ios::in);
-	for (j = 0; j < 19; j++)
+	for (j = 0; j < 21; j++)
 	{
 		try
 		{
@@ -65,6 +70,10 @@ int main()
 				initfile >> filenameH;
 			else if (paraName == "filenameL:")
 				initfile >> filenameL;
+			else if (paraName == "filenameF1:")
+				initfile >> filenameF1;
+			else if (paraName == "filenameF2:")
+				initfile >> filenameF2;
 			else if (paraName == "seed:")
 				initfile >> seed;
 			else if (paraName == "dt:")
@@ -96,9 +105,7 @@ int main()
 			else if (paraName == "qiB:")
 				initfile >> qiB;
 			else if (paraName == "pmigra:")
-			{
 				initfile >> pmigra;
-			}
 			else
 			{
 				std::cout << "INITFILE READING ERROR!" << endl;
@@ -136,6 +143,7 @@ int main()
 	int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
 	int direction = 0;
 	int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
+	bool FrameMove = false;	//keeps track of whether frame has moved by one in each iteration.
 
 	Phage* temp;
 
@@ -300,6 +308,7 @@ int main()
 	//i: simulation timestep
 	for (i = 0; i < simulation_steps; i++)
 	{
+		FrameMove = false;
 
 		/*if at equilibrium, label phages*/
 		if (i == labelling_step)
@@ -662,7 +671,7 @@ int main()
 					}
 					
 					FramePos++;
-					
+					FrameMove = true;
 					std::cout << "FramePos: " << FramePos << endl;
 				}
 				else
@@ -845,6 +854,16 @@ int main()
 				outfileH.close();
 			}
 
+			if (FrameMove == true)
+			{
+				outfileF1.open(filenameF1, ios::app);
+				outfileF1 << i << " ";
+				outfileF1.close();
+			}
+
+			outfileF2.open(filenameF2, ios::app);
+			outfileF2 << FramePos << " ";
+			outfileF2.close();
 
 		}
 
