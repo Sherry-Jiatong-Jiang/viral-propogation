@@ -11,7 +11,7 @@
 
 using namespace std;
 
-//ifstream initfile;
+ifstream initfile;
 
 ofstream outfileP;
 ofstream outfileH;
@@ -19,12 +19,6 @@ ofstream outfileL;
 
 string initfilename = "init.txt";
 
-
-const int calX(int x)
-{
-	const int y = x;
-	return y;
-}
 
 
 int main()
@@ -53,23 +47,20 @@ int main()
 	double qd = 0;	//death probs
 	double qiI = 0.01;	//infecting infected bacteria probs
 	double qiB = 0.01;	//infecting uninfected bacteria probs
-	double pmigra;	//migration probability (to both sides)
+	double pmigra = 0.05;	//migration probability (to both sides)
 
 
 	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
-	//string paraName;
+	string paraName;
 
-	/*initfile.open(initfilename, ios::in);
+	initfile.open(initfilename, ios::in);
 	for (j = 0; j < 19; j++)
 	{
 		try
 		{
 			initfile >> paraName;
 			if (paraName == "filenameP:")
-			{
 				initfile >> filenameP;
-				std::cout << filenameP;
-			}
 			else if (paraName == "filenameH:")
 				initfile >> filenameH;
 			else if (paraName == "filenameL:")
@@ -77,10 +68,7 @@ int main()
 			else if (paraName == "seed:")
 				initfile >> seed;
 			else if (paraName == "dt:")
-			{
-				initfile >> dt_;
-				std::cout << dt;
-			}
+				initfile >> dt;
 			else if (paraName == "dx:")
 				initfile >> dx;
 			else if (paraName == "tao:")
@@ -110,7 +98,6 @@ int main()
 			else if (paraName == "pmigra:")
 			{
 				initfile >> pmigra;
-				std::cout << pmigra;
 			}
 			else
 			{
@@ -125,7 +112,7 @@ int main()
 
 	}
 	initfile.close();
-*/
+
 
 	
 
@@ -820,9 +807,8 @@ int main()
 			cout << "Uninfected bacteria population within each deme: " << B_population << endl;
 			cout << "Infected bacteria population within each deme: " << I_population << endl;*/
 
-			std::cout << "ffffff";
-			//outfileP.open(filenameP, ios::trunc);
-			outfileP.open(filenameP, ios::trunc);
+
+			outfileP.open(filenameP, ios::app);
 			
 			for (j = 0; j < X; j++)
 				outfileP << P_population[j] << " ";
