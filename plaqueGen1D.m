@@ -19,19 +19,19 @@ for i=1:3:n1
     subplot(1,3,1);
     plot(t1,Psim001(i,:));
     legend('Phage');
-    xlabel('Deme posiiton');
+    xlabel('Deme position');
     ylabel('Population per deme');
     title((i-1)/3);
     subplot(1,3,2);
     plot(t1,Psim001(i+1,:));
     legend('Uninfected bacteria');
-    xlabel('Deme posiiton');
+    xlabel('Deme position');
     ylabel('Population per deme');
     title((i-1)/3);
     subplot(1,3,3);
     plot(t1,Psim001(i+2,:));
     legend('Infected Bacteria');
-    xlabel('Deme posiiton');
+    xlabel('Deme position');
     ylabel('Population per deme');
      title((i-1)/3);
     
