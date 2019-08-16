@@ -37,22 +37,22 @@ int main()
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
 	//system parameters
-	double dt = 100;   //time (sec) per simulation step
-	double dx = 0.1;	//unit deme length (mm)
-	int tao = 50;	//(lysis time / tstep)
-	int burst_size = 50;	//20-50
-	int X = 100;	//max demes, constant to be used to initialize array size later
+	double dt = 1;   //unit simulation step time (min) only for record
+	double dx = 31.62;	//(sqrt(1000) for matlab simulation) unit deme length (um) only for record
+	int tao = 50;	//(15-25 for T7) lysis time (steps)
+	int burst_size = 50;	//(50, 10-400)
+	int X = 100;	//max demes in frame
 	int N = 1000, Np = N * burst_size;//max bacteria, and max phages max phages where applicable????????????????
-	int N0 = 1000;		//initial phage numbers in the each deme
+	int N0 = 1000;		//initial phage numbers in the each deme (N0 and N only affecting initial distribuiton, and can be accounted for by tuning probabilities)
 	int Nx = 10;	//initial number of demes which have phages
 	int simulation_steps = 4000;	//total simulation steps (total time/dt)
 	int visualization_steps = 10;	//how many steps before each output on the screen
 	int labelling_step = 2000;	//how many steps to reach equilibrium before labelling phages
 	//phage probs parameters (per timestep)
-	double qd = 0;	//death probs
-	double qiI = 0.01;	//infecting infected bacteria probs
-	double qiB = 0.01;	//infecting uninfected bacteria probs
-	double pmigra = 0.05;	//migration probability (to both sides)
+	double qd = 0;	//(0) death probs
+	double qiI = 0.01;	//(try different orders of mag) infecting infected bacteria probs
+	double qiB = 0.01;	//(try different orders of mag) infecting uninfected bacteria probs
+	double pmigra = 0.05;	//(0.2, 0.1-0.3) migration probability     (to both sides??????????????????????????????????????????????????????)
 
 
 	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
