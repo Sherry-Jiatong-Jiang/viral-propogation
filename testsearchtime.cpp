@@ -7,7 +7,7 @@
 #include <vector>
 //#include <ctime>	//for time(NULL) in random seed 
 #include <random>	//for random device and mt19937
-#include <string>	//for "cout ambiguous" error
+#include <string>	//for "cout ambiguous" error -???
 
 using namespace std;
 
@@ -16,7 +16,7 @@ ifstream initfile;
 ofstream outfileP;
 ofstream outfileH;
 ofstream outfileL;
-ofstream outfileF1;
+//ofstream outfileF1;
 ofstream outfileF2;
 
 string initfilename = "init001.txt";
@@ -32,13 +32,13 @@ int main()
 	string filenameP = "sim001P.dat";	//must be different everytime! otherwise will always append to previous file.
 	string filenameH = "sim001H.dat";
 	string filenameL = "sim001L.dat";
-	string filenameF1 = "sim001F1.dat";
+	//string filenameF1 = "sim001F1.dat";
 	string filenameF2 = "sim001F2.dat";
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
 	//system parameters
-	double dt = 1;   //unit simulation step time (min) only for record
-	double dx = 31.62;	//(sqrt(1000) for matlab simulation) unit deme length (um) only for record
+	double dt = 1;   //1 unit simulation step time (min) only for record
+	double dx = 31.62;	//31.62 (sqrt(1000) for matlab simulation) unit deme length (um) only for record
 	int tao = 50;	//(15-25 for T7) lysis time (steps)
 	int burst_size = 50;	//(50, 10-400)
 	int X = 100;	//max demes in frame
@@ -59,7 +59,7 @@ int main()
 	string paraName;
 
 	initfile.open(initfilename, ios::in);
-	for (j = 0; j < 21; j++)
+	for (j = 0; j < 20; j++)
 	{
 		try
 		{
@@ -70,8 +70,8 @@ int main()
 				initfile >> filenameH;
 			else if (paraName == "filenameL:")
 				initfile >> filenameL;
-			else if (paraName == "filenameF1:")
-				initfile >> filenameF1;
+			//else if (paraName == "filenameF1:")
+				//initfile >> filenameF1;
 			else if (paraName == "filenameF2:")
 				initfile >> filenameF2;
 			else if (paraName == "seed:")
@@ -143,7 +143,7 @@ int main()
 	int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
 	int direction = 0;
 	int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
-	bool FrameMove = false;	//keeps track of whether frame has moved by one in each iteration.
+	bool FrameMove = false;	//keeps track of whether frame has moved by one in each iteration. Not currently used after disabling file F1.
 
 	Phage* temp;
 
@@ -712,7 +712,7 @@ int main()
 			for (w = 0; w < (*demesB[j]).size(); w++)
 			{
 				k++;
-				if ((*((*demesB[j])[k-1])).infected == true && i - (*((*demesB[j])[k-1])).infectionStep == tao && (*((*demesB[j])[k-1])).infectionStep > -1)
+				if ((*((*demesB[j])[k-1])).infected == true && i - (*((*demesB[j])[k-1])).infectionStep >= tao && (*((*demesB[j])[k-1])).infectionStep > -1)
 				{
 					k--;
 					for (c = 0; c < burst_size; c++)
@@ -854,12 +854,12 @@ int main()
 				outfileH.close();
 			}
 
-			if (FrameMove == true)
+			/*if (FrameMove == true)
 			{
 				outfileF1.open(filenameF1, ios::app);
 				outfileF1 << i << " ";
 				outfileF1.close();
-			}
+			}*/
 
 			outfileF2.open(filenameF2, ios::app);
 			outfileF2 << FramePos << " ";

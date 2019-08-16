@@ -1,7 +1,7 @@
 load sim001P.dat;
 load sim001H.dat;
 load sim001L.dat;
-load sim001F1.dat;
+%load sim001F1.dat;
 load sim001F2.dat;
 
 [n1,p1] = size(sim001P);
@@ -10,8 +10,8 @@ t1 = 1:p1;
 t2 = 1:p2;
 [n3, p3] = size(sim001L);
 t3 = 1:p3;
-[n4, p4] = size(sim001F1);
-t4 = 1:p4;
+%[n4, p4] = size(sim001F1);
+%t4 = 1:p4;
 [n5, p5] = size(sim001F2);
 t5 = 1:p5;
 figure (1);
@@ -35,7 +35,7 @@ for i=1:3:n1
     ylabel('Population per deme');
      title((i-1)/3);
     
-    pause(.0002);
+    pause(.00001);
 end
 
 figure (2);

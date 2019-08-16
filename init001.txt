@@ -4,8 +4,6 @@ filenameH:
 sim001H.dat
 filenameL:
 sim001L.dat
-filenameF1:
-sim001F1.dat
 filenameF2:
 sim001F2.dat
 seed:
@@ -27,11 +25,11 @@ N0:
 Nx:
 10
 simulation_steps:
-4000
+1000
 visualization_steps:
 10
 labelling_step:
-2000
+500
 qd:
 0
 qiI:
@@ -39,4 +37,4 @@ qiI:
 qiB:
 0.01
 pmigra:
-0.05
+0.1
