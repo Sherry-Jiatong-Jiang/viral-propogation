@@ -5,15 +5,22 @@ load sim001L.dat;
 load sim001F2.dat;
 
 [n1,p1] = size(sim001P);
-t1 = 1:p1;
+t1 = 0:(p1-1);
 [n2, p2] = size(sim001H);
-t2 = 1:p2;
+t2 = 0:(p2-1);
 [n3, p3] = size(sim001L);
-t3 = 1:p3;
+t3 = 0:(p3-1);
 %[n4, p4] = size(sim001F1);
-%t4 = 1:p4;
+%t4 = 0:p4-1;
 [n5, p5] = size(sim001F2);
-t5 = 1:p5;
+t5 = 0:(p5-1);
+
+v5 = t5;
+for i=1:1:(p5-1)
+    v5(i)=sim001F2(i+1)-sim001F2(i);
+end
+v5(p5)=v5(p5-1);
+
 figure (1);
 for i=1:3:n1
     subplot(1,3,1);
@@ -45,24 +52,15 @@ xlabel('Visualization step)');
 ylabel('log(H(t))');
 
 figure (3);
-
-% subplot(2,1,1);
+subplot(1,2,1);
 plot(t5,sim001F2);
 xlabel('Visualization step');
-ylabel('unit: dx/dt');
+ylabel('unit: dx');
 title('Front Position');
-
-% v = sim001F1;
-% w =
-% for i=1:1:n4
-%     for j=v(i):1:v(i+1)
-%         v(j) = 1/(v(i+1) - v(i));
-%     end
-% end
-% subplot(2,1,2);
-% plot(t4,v);
-% xlabel('Simulation step)');
-% ylabel('unit: dx/dt');
-% title('Front Velocity');
+subplot(1,2,2);
+plot(t5,v5);
+xlabel('Visualization step');
+ylabel('unit: dx/(dt*visualization_steps)');
+title('Front Velocity');
 
 

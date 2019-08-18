@@ -25,11 +25,11 @@ N0:
 Nx:
 10
 simulation_steps:
-1000
+2000
 visualization_steps:
-10
+20
 labelling_step:
-500
+1000
 qd:
 0
 qiI:

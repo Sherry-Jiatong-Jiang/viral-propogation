@@ -130,7 +130,7 @@ int main()
 
 	//parameters relating to output
 	vector <int> P_population(X);	//output of phage population distribution
-	vector <int> IB_population(X);	//output of total bacteria population distribution
+	//vector <int> IB_population(X);	//output of total bacteria population distribution
 	vector <int> B_population(X);	//output of uninfected bacteria population distribution
 	vector <int> I_population(X);	//output of infected bacteria population distribution
 	vector <vector<double>> label_proportion(labels);//output of proportional distribution of each label within each deme, and initialize to zeroes ([0] corresponding to label 1 etc)
@@ -224,10 +224,11 @@ int main()
 	for (j = 0; j < X; j++)
 	{
 		P_population[j] = (*demesP[j]).size();
-		IB_population[j] = (*demesB[j]).size();
+		//IB_population[j] = (*demesB[j]).size();
 		I_population[j] = 0;
+		B_population[j] = 0;
 
-		for (k = 0; k < (*demesB[j]).size(); k++)
+		/*for (k = 0; k < (*demesB[j]).size(); k++)
 		{
 			if ((*demesB[j])[k]->infected == true)
 			{
@@ -235,7 +236,19 @@ int main()
 			}
 		}
 
-		B_population[j] = IB_population[j] - I_population[j];
+		B_population[j] = IB_population[j] - I_population[j];*/
+
+		for (k = 0; k < (*demesB[j]).size(); k++)
+		{
+			if ((*demesB[j])[k]->infected == true && (*demesB[j])[k]->lysed == false)
+			{
+				I_population[j] += 1;
+			}
+			if ((*demesB[j])[k]->infected == false && (*demesB[j])[k]->lysed == false)
+			{
+				B_population[j] += 1;
+			}
+		}
 
 		for (k = 0; k < (*demesP[j]).size(); k++)
 		{
@@ -470,7 +483,7 @@ int main()
 				bacterium_index = dist3(e);
 
 				//if infecting uninfected bacteria:
-				if ((*((*demesB[j])[bacterium_index])).infected == false)
+				if ((*((*demesB[j])[bacterium_index])).infected == false && (*((*demesB[j])[bacterium_index])).lysed == false)
 				{
 					(*((*demesB[j])[bacterium_index])).label = (*((*demesP[j])[b])).label;
 					(*((*demesB[j])[bacterium_index])).infected = true;
@@ -478,12 +491,21 @@ int main()
 					(*((*demesB[j])[bacterium_index])).infectionStep = i;
 					////update infectionTime with newly infected bacteria
 					//(*infectionTime[0]).push_back((*demesB[j])[bacterium_index]);
+
+					//delete phage after infection
+					delete (*demesP[j])[b];
+					(*demesP[j]).erase((*demesP[j]).begin() + b);
+					total_phage_size = total_phage_size - 1;
 				}
 
-				//delete phage after infection
-				delete (*demesP[j])[b];
-				(*demesP[j]).erase((*demesP[j]).begin() + b);
-				total_phage_size = total_phage_size - 1;
+				//if infecting infected bacteria:
+				else if ( (*((*demesB[j])[bacterium_index])).lysed == false)
+				{
+					//delete phage after infection
+					delete (*demesP[j])[b];
+					(*demesP[j]).erase((*demesP[j]).begin() + b);
+					total_phage_size = total_phage_size - 1;
+				}
 			}
 		}
 
@@ -560,6 +582,7 @@ int main()
 			}
 		}
 
+		//if swapScheme = false, which is what is actually used
 		else
 		{
 			migration_number = round(pmigra * total_phage_size);
@@ -589,11 +612,16 @@ int main()
 						break;
 					}
 				}
-				//if in the first deme, only move to the right
+				//if in the first deme, only move to the right, but with half pmigra probs
 				if (j == 0)
 				{
-					(*demesP[j + 1]).push_back((*demesP[j])[b]);
-					(*demesP[j]).erase((*demesP[j]).begin() + b);
+					uniform_int_distribution<int> dist5{ 0, 1 };
+					direction = dist5(e);
+					if (direction == 0)
+					{
+						(*demesP[j + 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
 				}
 				//if in the last deme, create new deme
 				else if (j == X - 1)
@@ -606,9 +634,9 @@ int main()
 
 					//randomly pick one phage
 
-					uniform_int_distribution<int> dist5{ 0, 1 };
+					uniform_int_distribution<int> dist6{ 0, 1 };
 					// get random numbers with:
-					direction = dist5(e);
+					direction = dist6(e);
 
 					if (direction == 1)
 					{
@@ -683,10 +711,10 @@ int main()
 
 					//randomly pick one phage
 
-					uniform_int_distribution<int> dist6{ 0, 1 };
+					uniform_int_distribution<int> dist7{ 0, 1 };
 
 					// get random numbers with:
-					direction = dist6(e);
+					direction = dist7(e);
 					
 
 					if (direction == 1)
@@ -708,17 +736,20 @@ int main()
 		/*bacteria lysis and new phage creation*/
 		for (j = 0; j < X; j++)
 		{
-			k = 0;
+			//k = 0;
 			for (w = 0; w < (*demesB[j]).size(); w++)
 			{
-				k++;
-				if ((*((*demesB[j])[k-1])).infected == true && i - (*((*demesB[j])[k-1])).infectionStep >= tao && (*((*demesB[j])[k-1])).infectionStep > -1)
+				//k++;
+
+				//if ((*((*demesB[j])[k-1])).infected == true && i - (*((*demesB[j])[k-1])).infectionStep >= tao)
+				if (((*((*demesB[j])[w])).infected == true) && (i - (*((*demesB[j])[w])).infectionStep == tao) && ((*((*demesB[j])[w])).lysed == false))
 				{
-					k--;
+					//k--;
 					for (c = 0; c < burst_size; c++)
 					{
 						(*demesP[j]).push_back(new Phage);
-						(*demesP[j])[(*demesP[j]).size() - 1]->label = (*((*demesB[j])[k])).label;
+						//(*demesP[j])[(*demesP[j]).size() - 1]->label = (*((*demesB[j])[k])).label;
+						(*demesP[j])[(*demesP[j]).size() - 1]->label = (*((*demesB[j])[w])).label;
 						(*demesP[j])[(*demesP[j]).size() - 1]->pmigra = pmigra;
 						(*demesP[j])[(*demesP[j]).size() - 1]->qd = qd;
 						(*demesP[j])[(*demesP[j]).size() - 1]->qiB = qiB;
@@ -728,9 +759,10 @@ int main()
 					//delete lysed bacteria from object storage & from demesB
 					//first find bacteria coordinate
 					
-					delete (*demesB[j])[k];
-					(*demesB[j]).erase((*demesB[j]).begin() + k);
-						
+					//delete (*demesB[j])[k];
+					//(*demesB[j]).erase((*demesB[j]).begin() + k);
+					
+					(*((*demesB[j])[w])).lysed = true;
 				}
 			}
 		}
@@ -751,16 +783,19 @@ int main()
 			for (j = 0; j < demesP.size(); j++)
 			{
 				P_population[j] = (*demesP[j]).size();
-				IB_population[j] = (*demesB[j]).size();
 				I_population[j] = 0;
+				B_population[j] = 0;
 				for (k = 0; k < (*demesB[j]).size(); k++)
 				{
-					if ((*demesB[j])[k]->infected == true)
+					if ((*demesB[j])[k]->infected == true && (*demesB[j])[k]->lysed == false)
 					{
 						I_population[j] += 1;
 					}
+					if ((*demesB[j])[k]->infected == false && (*demesB[j])[k]->lysed == false)
+					{
+						B_population[j] += 1;
+					}
 				}
-				B_population[j] = IB_population[j] - I_population[j];
 				//calculate label population
 				for (k = 0; k < (*demesP[j]).size(); k++)
 				{
