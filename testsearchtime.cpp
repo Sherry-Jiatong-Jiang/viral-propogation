@@ -36,6 +36,7 @@ int main()
 	string filenameF2 = "sim001F2.dat";
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
+	bool binomial = false;
 	//system parameters
 	double dt = 1;   //1 unit simulation step time (min) only for record
 	double dx = 31.62;	//31.62 (sqrt(1000) for matlab simulation) unit deme length (um) only for record
@@ -59,7 +60,7 @@ int main()
 	string paraName;
 
 	initfile.open(initfilename, ios::in);
-	for (j = 0; j < 20; j++)
+	for (j = 0; j < 21; j++)
 	{
 		try
 		{
@@ -76,6 +77,8 @@ int main()
 				initfile >> filenameF2;
 			else if (paraName == "seed:")
 				initfile >> seed;
+			else if (paraName == "binomial:")
+				initfile >> binomial;
 			else if (paraName == "dt:")
 				initfile >> dt;
 			else if (paraName == "dx:")
@@ -406,7 +409,16 @@ int main()
 
 		try
 		{
-			death_number = round(qd * total_phage_size);
+			if (binomial == false)
+			{
+				death_number = std::round(qd* total_phage_size);
+			}
+			else
+			{
+				binomial_distribution<int> bdist1(total_phage_size, qd);
+				death_number = bdist1(e);
+			}
+
 			for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
 			{
 				//randomly pick one phage
@@ -445,7 +457,16 @@ int main()
 
 		/*infect uninfected and infected bacteria*/
 
-		infect_B_number = std::round(qiB * total_phage_size);
+		if (binomial == false)
+		{
+			infect_B_number = std::round(qiB * total_phage_size);
+		}
+		else
+		{
+			binomial_distribution<int> bdist2(total_phage_size, qiB);
+			infect_B_number = bdist2(e);
+		}
+		
 		for (k = 0; k < infect_B_number; k++)
 		{
 			//randomly pick one phage
@@ -514,7 +535,17 @@ int main()
 
 		if (swapScheme == true)	//complete this optoin????????????????????????
 		{
-			migration_number = round(pmigra / 2 * total_phage_size);
+			
+			if (binomial == false)
+			{
+				migration_number = std::round(pmigra / 2 * total_phage_size);
+			}
+			else
+			{
+				binomial_distribution<int> bdist3(total_phage_size, pmigra/2);
+				migration_number = bdist3(e);
+			}
+
 			for (k = 0; k < migration_number; k++)
 			{
 				////randomly pick one phage
@@ -585,7 +616,15 @@ int main()
 		//if swapScheme = false, which is what is actually used
 		else
 		{
-			migration_number = round(pmigra * total_phage_size);
+			if (binomial == false)
+			{
+				migration_number = std::round(pmigra * total_phage_size);
+			}
+			else
+			{
+				binomial_distribution<int> bdist4(total_phage_size, pmigra);
+				migration_number = bdist4(e);
+			}
 			for (k = 0; k < migration_number; k++)
 			{
 				//randomly pick one phage
