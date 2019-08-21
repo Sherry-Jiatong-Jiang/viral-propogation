@@ -18,7 +18,8 @@ x=(-80:80);
 box=numel(x);
 [X,Y]=meshgrid(x,x); %define spatial grid
 Tmax=1000;
-K=10^5; %%bacteria carrying capacity per lattice site 
+%K=10^5; %%bacteria carrying capacity per lattice site 
+K=1000; %%bacteria carrying capacity per lattice site 
 %Bmax=B0;
 %Pmax=beta*Bmax;
 %%follow the dynamics of free phage (P), bacteria (B) and infected cells
@@ -94,6 +95,7 @@ figure(1)
 for i=1:10:T
     Bmax=max(max(B(:,:,i)));
     Pmax=max(max(P(:,:,i)));
+    Pmax=max(1,Pmax);
     subplot(2,3,1)
     imagesc(P(:,:,i),[0,Pmax])
     axis square
