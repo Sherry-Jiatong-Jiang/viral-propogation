@@ -48,6 +48,10 @@ end
 % xlabel('Visualization step)');
 % ylabel('log(H(t))');
 
+if sim001H(p2) == 0
+    p2 = p2-1;
+end
+%start from 2 because the first data point is zero by initialization.
 pH=polyfit(t2(2:p2),log(sim001H(2:p2)),1);
 
 HCal = pH(1)*t2(2:p2) + pH(2);
@@ -58,7 +62,11 @@ hold on
 plot(t2(2:p2),HCal);
 xlabel('Visualization step after labelling event');
 ylabel('log(H(t))');
-title('Heterozygosity of phage');
+if sim001H(p2) == 0
+    title('Heterozygosity of phage (reaches fixation)');
+else
+    title('Heterozygosity of phage');
+end
 grid on
 hold off
 

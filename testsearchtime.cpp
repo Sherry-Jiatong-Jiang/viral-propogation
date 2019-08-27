@@ -266,7 +266,7 @@ int main()
 
 
 	}
-	//calculate heterozygosity before dividing labels into proportions!
+	//calculate heterozygosity when label_portions still represent label quantities!
 	tot = 0;
 	heterozygosity.push_back(0);
 	for (k = 0; k < labels; k++)
@@ -850,7 +850,7 @@ int main()
 
 			}
 
-			//calculate heterozygosity before dividing labels into proportions!
+			//calculate heterozygosity when label_portions still represent label quantities!
 			tot = 0;
 			heterozygosity.push_back(0);
 			for (k = 0; k < labels; k++)
@@ -926,6 +926,10 @@ int main()
 				outfileH.open(filenameH, ios::app);
 				outfileH << heterozygosity.back() << " ";
 				outfileH.close();
+
+				//if fixation is reached before simulation ends (only able to detect at visualization steps, i.e. may miss the exact fixation)
+				if (heterozygosity.back() == 0)
+					break;
 			}
 
 			/*if (FrameMove == true)
