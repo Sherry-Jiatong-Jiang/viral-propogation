@@ -1,0 +1,70 @@
+jj455@login-cpu.hpc.cam.ac.uk
+
+scp jj455@login-e-12.hpc.cam.ac.uk:/usr/local/Cluster-Docs/SLURM/slurm_submit.peta4-skylake \Users\Public
+
+set PATH=C:\path\to\putty\directory;%PATH%
+
+module load gcc-7.2.0-gcc-4.8.5-pqn7o2k
+g++ -std=c++11 testsearchtime.cpp -o testsearchtime
+
+in powershell.exe
+pscp -r C:\Users\Public\jobs jj455@login-cpu.hpc.cam.ac.uk:/rds/user/jj455/hpc-work/jobarray0
+
+in putty:
+[jj455@login-e-13 home]$ cd /rds/user/jj455/hpc-work
+[jj455@login-e-13 hpc-work]$ ls
+test  testsearchtime.exe
+[jj455@login-e-13 hpc-work]$ ls -r
+testsearchtime.exe  test
+
+[jj455@login-e-13 hpc-work]$ cd ./test/
+[jj455@login-e-13 test]$ ls
+init001.txt  testsearchtime.exe
+
+[jj455@login-e-13 ~]$ cd /rds/user/jj455/hpc-work
+[jj455@login-e-13 hpc-work]$ cp testsearchtime.exe ./sim1/
+cp: cannot create regular file ‘./sim1/’: Not a directory
+[jj455@login-e-13 hpc-work]$ mkdir ./sim1
+[jj455@login-e-13 hpc-work]$ cp testsearchtime.exe ./sim1/
+[jj455@login-e-13 hpc-work]$ rm ./testsearchtime.exe
+[jj455@login-e-13 hpc-work]$ ls
+sim1  test
+[jj455@login-e-13 hpc-work]$ cd ./test
+[jj455@login-e-13 test]$ cp init.txt /rds/user/jj455/hpc-work/sim1
+cp: cannot stat ‘init.txt’: No such file or directory
+[jj455@login-e-13 test]$ cp init001.txt /rds/user/jj455/hpc-work/sim1
+[jj455@login-e-13 test]$ rm -r /test
+rm: cannot remove ‘/test’: No such file or directory
+[jj455@login-e-13 test]$ rm -r ./test
+rm: cannot remove ‘./test’: No such file or directory
+[jj455@login-e-13 test]$ cd ..
+[jj455@login-e-13 hpc-work]$ rm -r ./test
+[jj455@login-e-13 hpc-work]$ ls
+sim1
+[jj455@login-e-13 hpc-work]$ ls -r
+sim1
+
+
+in cmd.exe:
+C:\WINDOWS\system32>pscp -r C:\Users\Public\jobsubmission.bat jj455@login-cpu.hpc.cam.ac.uk:/rds/user/jj455/hpc-work/jobarray0
+jj455@login-cpu.hpc.cam.ac.uk's password:
+jobsubmission.bat         | 2 kB |   2.3 kB/s | ETA: 00:00:00 | 100%
+
+in putty:
+[jj455@login-e-15 hpc-work]$ sbatch ./jobsubmission.bat
+sbatch: error: Batch script contains DOS line breaks (\r\n)
+sbatch: error: instead of expected UNIX line breaks (\n).
+[jj455@login-e-15 hpc-work]$ dos2unix jobsubmission.bat
+dos2unix: converting file jobsubmission.bat to Unix format ...
+[jj455@login-e-15 hpc-work]$ sbatch ./jobsubmission.bat
+Submitted batch job 14928256
+
+
+
+pscp -r C:\Users\Public\jobarray0 jj455@login-cpu.hpc.cam.ac.uk:/rds/user/jj455/hpc-work
+
+cd /rds/user/jj455/hpc-work/jobarray0
+dos2unix jobsubmission.bat
+sbatch ./jobsubmission.bat
+
+pscp -r jj455@login-cpu.hpc.cam.ac.uk:/rds/user/jj455/hpc-work/jobarray0 C:\Users\Public
