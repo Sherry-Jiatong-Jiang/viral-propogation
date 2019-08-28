@@ -2,12 +2,9 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>	//for rounding
-//#include <cstdlib>	//for random generators
 #include <array>
 #include <vector>
-//#include <ctime>	//for time(NULL) in random seed 
 #include <random>	//for random device and mt19937
-#include <string>	//for "cout ambiguous" error -???
 
 using namespace std;
 
@@ -16,7 +13,6 @@ ifstream initfile;
 ofstream outfileP;
 ofstream outfileH;
 ofstream outfileL;
-//ofstream outfileF1;
 ofstream outfileF2;
 
 string initfilename = "init001.txt";
@@ -32,7 +28,6 @@ int main()
 	string filenameP = "sim001P.dat";	//must be different everytime! otherwise will always append to previous file.
 	string filenameH = "sim001H.dat";
 	string filenameL = "sim001L.dat";
-	//string filenameF1 = "sim001F1.dat";
 	string filenameF2 = "sim001F2.dat";
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
@@ -43,7 +38,7 @@ int main()
 	int tao = 50;	//(15-25 for T7) lysis time (steps)
 	int burst_size = 50;	//(50, 10-400)
 	int X = 100;	//max demes in frame
-	int N = 1000, Np = N * burst_size;//max bacteria, and max phages max phages where applicable????????????????
+	int N = 1000, Np = N * burst_size;//max bacteria, and max phages
 	int N0 = 1000;		//initial phage numbers in the each deme (N0 and N only affecting initial distribuiton, and can be accounted for by tuning probabilities)
 	int Nx = 10;	//initial number of demes which have phages
 	int simulation_steps = 4000;	//total simulation steps (total time/dt)
@@ -53,7 +48,7 @@ int main()
 	double qd = 0;	//(0) death probs
 	double qiI = 0.01;	//(try different orders of mag) infecting infected bacteria probs
 	double qiB = 0.01;	//(try different orders of mag) infecting uninfected bacteria probs
-	double pmigra = 0.05;	//(0.2, 0.1-0.3) migration probability     (to both sides??????????????????????????????????????????????????????)
+	double pmigra = 0.05;	//(0.2, 0.1-0.3) migration probability     (move to either side with pmigra/2, with exception of 1st deme which only can move to right with migra/2)
 
 
 	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
@@ -71,8 +66,6 @@ int main()
 				initfile >> filenameH;
 			else if (paraName == "filenameL:")
 				initfile >> filenameL;
-			//else if (paraName == "filenameF1:")
-				//initfile >> filenameF1;
 			else if (paraName == "filenameF2:")
 				initfile >> filenameF2;
 			else if (paraName == "seed:")
@@ -112,7 +105,8 @@ int main()
 			else
 			{
 				std::cout << "INITFILE READING ERROR!" << endl;
-				cin >> paraName;
+				simulation_steps = 0;
+				break;
 			}
 		}
 		catch (exception& e)
@@ -128,8 +122,6 @@ int main()
 
 
 	int labels = X;	// << X for current initialization scheme! number of initial different gene labels, constant to be used to initialize array size later
-	bool swapScheme = false;	//if swap is true, use swapping scheme (swapping phages and holes); if false, use random move scheme for phages. 
-	//For both schemes, randomly choose right or left move, use poisson distribution for total number of phages to be randomly selected. 
 
 	//parameters relating to output
 	vector <int> P_population(X);	//output of phage population distribution
@@ -146,27 +138,19 @@ int main()
 	int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
 	int direction = 0;
 	int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
-	bool FrameMove = false;	//keeps track of whether frame has moved by one in each iteration. Not currently used after disabling file F1.
-
-	Phage* temp;
 
 	vector <vector <Bacterium*>* > demesB(X);
 	vector <vector <Phage*>* > demesP(X);
-	//vector <vector <Bacterium*>* > infectionTime(tao);
-
-
-
-
-
-
-
-
 
 
 	//random_device rd;
 	mt19937 e{ seed }; // or std::default_random_engine e{rd()};
 
-	/*Initialization of demes and agents*/
+	
+					
+
+
+    /*Initialization of demes and agents*/
 
 	/*demesB and demesP are two vectors of initial size X storing pointers which point to
 	a group of vectors which represent demes of bacteria and phages respectively.
@@ -179,13 +163,9 @@ int main()
 		{
 			(*demesB[i]).push_back(new Bacterium);	//N bacteria per deme initially
 			(*demesB[i])[j]->infected = false;
-			//(*demesB[i])[j]->demeIndex = i;
-			//(*demesB[i])[j]->initFramePos = FramePos;
-			//(*demesB[i])[j]->indexInDeme = j;
 			(*demesB[i])[j]->label = 0;
 			(*demesB[i])[j]->lysed = false;
 			(*demesB[i])[j]->infectionStep = -1;
-			(*demesB[i])[j]->burst_size = burst_size;
 		}
 	}
 
@@ -199,20 +179,12 @@ int main()
 			{
 				(*demesP[i]).push_back(new Phage);
 				(*demesP[i])[j]->label = 0;
-				(*demesP[i])[j]->pmigra = pmigra;
-				(*demesP[i])[j]->qd = qd;
-				(*demesP[i])[j]->qiB = qiB;
-				(*demesP[i])[j]->qiI = qiI;
 			}
 		}
 
 	}
 
-	////initializing infectionTime vector
-	//for (i = 0; i < tao; i++)
-	//{
-	//	infectionTime[i] = new vector <Bacterium*>;
-	//}
+	
 
 
 	/*step 0 output showing initial distribution*/
@@ -227,19 +199,9 @@ int main()
 	for (j = 0; j < X; j++)
 	{
 		P_population[j] = (*demesP[j]).size();
-		//IB_population[j] = (*demesB[j]).size();
 		I_population[j] = 0;
 		B_population[j] = 0;
 
-		/*for (k = 0; k < (*demesB[j]).size(); k++)
-		{
-			if ((*demesB[j])[k]->infected == true)
-			{
-				I_population[j] += 1;
-			}
-		}
-
-		B_population[j] = IB_population[j] - I_population[j];*/
 
 		for (k = 0; k < (*demesB[j]).size(); k++)
 		{
@@ -297,25 +259,15 @@ int main()
 		{
 			if (P_population[j] != 0)
 			{
-				label_proportion[w][j] = label_proportion[w][j] / P_population[j];	//why 1.001?????????????????????????????
+				label_proportion[w][j] = label_proportion[w][j] / P_population[j];
 			}
 		}
 	}
 	std::cout.precision(2);
 	std::cout << "Current simulation step: " << 0 << endl;
-	//cout << "Phage population within each deme: " << P_population << endl;
-	//cout << "Uninfected Bacteria population within each deme: " << B_population << endl;
-	//cout << "Infected Bacteria population within each deme: " << I_population << endl;
-	//for (k = 0; k < labels; k++)	//reduce this section after making code modular??????????????????????????
-	//{
-	//	cout << "Label " << k + 1 << " proportion within each deme: ";
-	//	for (j = 0; j < X; j++)
-	//	{
-	//		cout << label_proportion[k][j] << ", ";
-	//	}
-	//	cout << endl;
-	//}
-	//cout << "Heterozygosity within current frame: " << heterozygosity[0] << endl;
+	
+
+
 
 
 
@@ -324,10 +276,9 @@ int main()
 	//i: simulation timestep
 	for (i = 0; i < simulation_steps; i++)
 	{
-		FrameMove = false;
 
 		/*if at equilibrium, label phages*/
-		if (i == labelling_step)
+		if (i + 1 == labelling_step)
 		{
 			for (k = 0; k < labels; k++)
 			{
@@ -346,69 +297,10 @@ int main()
 		}
 
 
-		///*Lyse and release*/
-
-		////create new column in infectionTime vector
-		//infectionTime.insert(infectionTime.begin(), new vector<Bacterium*>);
-
-		////create new phages, and delete lysed bacteria from object storage & from infectionTime & from demesB! 
-		////(not the other way round which causes memory leak!)
-		//int s = (*(infectionTime.back())).size();
-		//
-		//if ((*infectionTime.back()).size() != 0)
-		//{
-		//	for (j = 0; j < s; j++)
-		//	{ 
-		//		
-		//			int label = (*infectionTime.back())[j]->label;
-		//			int h = (*infectionTime.back())[j]->demeIndex - (FramePos - (*infectionTime.back())[j]->initFramePos);
-
-		//			//create new phages
-
-		//			for (k = 0; k < burst_size; k++)	//make this faster??????????????????????????
-		//			{
-		//				(*demesP[h]).push_back(new Phage);
-		//				(*demesP[h]).back()->label = label;	//same label as the infected bacteria
-		//				(*demesP[h]).back()->pmigra = pmigra;
-		//				(*demesP[h]).back()->qd = qd;
-		//				(*demesP[h]).back()->qiB = qiB;
-		//				(*demesP[h]).back()->qiI = qiI;
-		//				cout << "k1 " << k;
-		//				cout << endl;
-		//				
-		//			}
-
-		//			//delete lysed bacteria from object storage & from demesB
-		//			//first find bacteria coordinate
-		//			w = 0;
-		//			for (k = 0; k < (*demesB[h]).size(); k++)
-		//			{
-		//				w ++;
-		//				if ((*demesB[h])[w-1] == (*infectionTime.back())[j])
-		//				{
-		//					w --;
-		//					delete (*demesB[h])[w];
-		//					(*demesB[h]).erase((*demesB[h]).begin() + w);
-		//				}
-		//				cout << "k2 " << k;
-		//			}
-		//			cout << endl;
-		//			cout << "h" << s;
-		//			cout << endl;
-		//			
-		//		
-		//	}
-		//}
-		////delete the last element in infectionTime vector and the vector it points to
-		//delete infectionTime.back();
-		//infectionTime.erase(infectionTime.begin() + infectionTime.size() - 1);
-
-
+	
 
 		/*die*/
 
-		try
-		{
 			if (binomial == false)
 			{
 				death_number = std::round(qd* total_phage_size);
@@ -419,12 +311,8 @@ int main()
 				death_number = bdist1(e);
 			}
 
-			for (k = 0; k < death_number; k++)	//any way to make this faster??????????????????
+			for (k = 0; k < death_number; k++)
 			{
-				//randomly pick one phage
-				/*srand(time(NULL));
-				total_phage_index = rand() % total_phage_size + 1;*/
-
 
 				uniform_int_distribution<int> dist1{ 1, total_phage_size };
 				// get random numbers with:
@@ -448,12 +336,8 @@ int main()
 			}
 
 
-		}
-		catch (exception& e)
-		{
-			std::cout << "Standard exception: " << e.what() << endl;
-		}
-
+		
+		
 
 		/*infect uninfected and infected bacteria*/
 
@@ -469,10 +353,6 @@ int main()
 		
 		for (k = 0; k < infect_B_number; k++)
 		{
-			//randomly pick one phage
-			/*srand(time(NULL));
-			total_phage_index = rand() % total_phage_size + 1;*/
-
 
 			uniform_int_distribution<int> dist2{ 1, total_phage_size };
 			// get random numbers with:
@@ -494,9 +374,6 @@ int main()
 			//randomly pick one bacterium from the same deme if bacteria exist in that deme
 			if ((*demesB[j]).size() > 0)
 			{
-				/*srand(time(NULL));
-				bacterium_index = rand() % (*demesB[j]).size();*/
-
 
 				int size = (*demesB[j]).size() - 1;
 				uniform_int_distribution<int> dist3{ 0, size };
@@ -510,8 +387,6 @@ int main()
 					(*((*demesB[j])[bacterium_index])).infected = true;
 
 					(*((*demesB[j])[bacterium_index])).infectionStep = i;
-					////update infectionTime with newly infected bacteria
-					//(*infectionTime[0]).push_back((*demesB[j])[bacterium_index]);
 
 					//delete phage after infection
 					delete (*demesP[j])[b];
@@ -531,91 +406,10 @@ int main()
 		}
 
 
+
+
 		/*migration*/
-
-		if (swapScheme == true)	//complete this optoin????????????????????????
-		{
-			
-			if (binomial == false)
-			{
-				migration_number = std::round(pmigra / 2 * total_phage_size);
-			}
-			else
-			{
-				binomial_distribution<int> bdist3(total_phage_size, pmigra/2);
-				migration_number = bdist3(e);
-			}
-
-			for (k = 0; k < migration_number; k++)
-			{
-				////randomly pick one phage
-				//srand(time(NULL));	
-				//total_phage_index = rand() % total_phage_size + 1;
-
-				uniform_int_distribution<int> dista{ 1, total_phage_size };
-				total_phage_index = dista(e);
-
-				a = total_phage_index;
-				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
-				for (j = 0; j < X; j++)
-				{
-					a = a - (*demesP[j]).size();
-					if (a <= 0)
-					{
-						b = (*demesP[j]).size() + a;
-						b = b - 1;
-						break;
-					}
-				}
-
-
-				//randomly pick another phage from the same deme, two more from neighbouring demes (deal with repeat????????)
-				/*srand(time(NULL));
-				phage_index = rand() % (*demesP[j]).size();*/
-
-				int size1 = (*demesP[j]).size() - 1;
-				uniform_int_distribution<int> distb{ 0, size1 };
-				// get random numbers with:
-				phage_index = distb(e);
-
-				//deal with holes ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
-
-				//swap phages
-				if (j > 0)	//if not the first deme:
-				{
-					/*srand(time(NULL));
-					left_phage_index = rand() % ((*demesP[j - 1]).size());*/
-
-					int size2 = (*demesP[j - 1]).size() - 1;
-					uniform_int_distribution<int> distc{ 0, size2 };
-					left_phage_index = distc(e);
-
-					temp = (*demesP[j])[b];
-					(*demesP[j])[b] = (*demesP[j - 1])[left_phage_index];
-					(*demesP[j - 1])[left_phage_index] = temp;
-				}
-
-				if (j < X - 1)	//if not the last deme:
-				{
-					/*srand(time(NULL));
-					right_phage_index = rand() % ((*demesP[j + 1]).size());*/
-
-					int size3 = (*demesP[j + 1]).size() - 1;
-					uniform_int_distribution<int> distd{ 0, size3 };
-					right_phage_index = distd(e);
-
-					temp = (*demesP[j])[phage_index];
-					(*demesP[j])[phage_index] = (*demesP[j + 1])[right_phage_index];
-					(*demesP[j + 1])[right_phage_index] = temp;
-				}
-
-
-			}
-		}
-
-		//if swapScheme = false, which is what is actually used
-		else
-		{
+		
 			if (binomial == false)
 			{
 				migration_number = std::round(pmigra * total_phage_size);
@@ -627,9 +421,6 @@ int main()
 			}
 			for (k = 0; k < migration_number; k++)
 			{
-				//randomly pick one phage
-				/*srand(time(NULL));
-				total_phage_index = rand() % total_phage_size + 1;*/
 
 				//randomly pick one phage
 
@@ -637,10 +428,9 @@ int main()
 
 				// get random numbers with:
 				total_phage_index = dist4(e);
-				//cout << total_phage_index << endl;
 
 				a = total_phage_index;
-				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] other ways to improve speed????????????????????
+				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] 
 				for (j = 0; j < X; j++)
 				{
 					a = a - (*demesP[j]).size();
@@ -665,12 +455,6 @@ int main()
 				//if in the last deme, create new deme
 				else if (j == X - 1)
 				{
-
-					////randomly choose to move to the left or the right (1: left; 0: right)
-					//srand(time(NULL));
-					//direction = rand() % 2;
-
-
 					//randomly pick one phage
 
 					uniform_int_distribution<int> dist6{ 0, 1 };
@@ -691,12 +475,9 @@ int main()
 						{
 							(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
 							(*demesB[j + 1])[k]->infected = false;
-							//(*demesB[j + 1])[k]->demeIndex = j + 1;	//keep relative deme index in the wave front as attribute.
-							//(*demesB[j + 1])[k]->initFramePos = FramePos;	//keep track of the front absolute position at the time new deme is initialized, to be able to recover absolute deme index later.
 							(*demesB[j + 1])[k]->label = 0;
 							(*demesB[j + 1])[k]->lysed = false;
 							(*demesB[j + 1])[k]->infectionStep = -1;
-							(*demesB[j + 1])[k]->burst_size = burst_size;
 						}
 
 
@@ -707,21 +488,6 @@ int main()
 						
 						//delete first deme (only at the end in order not to mess up with indexes).
 						total_phage_size -= (*demesP[0]).size();
-
-						/*for (k = 0; k < tao; k++)
-						{
-							w = 0;
-							for (j = 0; j < (*infectionTime[k]).size(); j++)
-							{
-								w++;
-								if ((*infectionTime[k])[w-1]->demeIndex - (FramePos - (*infectionTime[k])[w-1]->initFramePos) == 0)
-								{
-									w --;
-									(*infectionTime[k]).erase((*infectionTime[k]).begin() + w);
-								}
-								cout << w;
-							}
-						}*/
 
 						for (k = 0; k < (*demesP[0]).size(); k++)
 						{
@@ -738,24 +504,17 @@ int main()
 					}
 					
 					FramePos++;
-					FrameMove = true;
 					std::cout << "FramePos: " << FramePos << endl;
 				}
 				else
 				{
-					////randomly choose to move to the left or the right (1: left; 0: right)
-					//srand(time(NULL));
-					//direction = rand() % 2;
-
 
 					//randomly pick one phage
-
 					uniform_int_distribution<int> dist7{ 0, 1 };
 
 					// get random numbers with:
 					direction = dist7(e);
 					
-
 					if (direction == 1)
 					{
 						(*demesP[j - 1]).push_back((*demesP[j])[b]);
@@ -769,42 +528,28 @@ int main()
 				}
 			}
 
-		}
+		
 
 
 		/*bacteria lysis and new phage creation*/
 		for (j = 0; j < X; j++)
 		{
-			//k = 0;
 			for (w = 0; w < (*demesB[j]).size(); w++)
 			{
-				//k++;
-
-				//if ((*((*demesB[j])[k-1])).infected == true && i - (*((*demesB[j])[k-1])).infectionStep >= tao)
 				if (((*((*demesB[j])[w])).infected == true) && (i - (*((*demesB[j])[w])).infectionStep == tao) && ((*((*demesB[j])[w])).lysed == false))
 				{
-					//k--;
 					for (c = 0; c < burst_size; c++)
 					{
 						(*demesP[j]).push_back(new Phage);
-						//(*demesP[j])[(*demesP[j]).size() - 1]->label = (*((*demesB[j])[k])).label;
 						(*demesP[j])[(*demesP[j]).size() - 1]->label = (*((*demesB[j])[w])).label;
-						(*demesP[j])[(*demesP[j]).size() - 1]->pmigra = pmigra;
-						(*demesP[j])[(*demesP[j]).size() - 1]->qd = qd;
-						(*demesP[j])[(*demesP[j]).size() - 1]->qiB = qiB;
-						(*demesP[j])[(*demesP[j]).size() - 1]->qiI = qiI;
 					}
-
-					//delete lysed bacteria from object storage & from demesB
-					//first find bacteria coordinate
-					
-					//delete (*demesB[j])[k];
-					//(*demesB[j]).erase((*demesB[j]).begin() + k);
-					
 					(*((*demesB[j])[w])).lysed = true;
 				}
 			}
 		}
+
+
+
 
 		/*temporary output*/
 
@@ -847,7 +592,6 @@ int main()
 						}
 					}
 				}
-
 			}
 
 			//calculate heterozygosity when label_portions still represent label quantities!
@@ -886,25 +630,17 @@ int main()
 				}
 			}
 			std::cout << "Current simulation step: " << i + 1 << endl;
-			/*cout << "Phage population within each deme: " << P_population << endl;
-			cout << "Uninfected bacteria population within each deme: " << B_population << endl;
-			cout << "Infected bacteria population within each deme: " << I_population << endl;*/
-
 
 			outfileP.open(filenameP, ios::app);
 			
 			for (j = 0; j < X; j++)
 				outfileP << P_population[j] << " ";
 			outfileP << endl;
-			/*outfile.close();*/
 
-			/*outfileB.open(filenameB, ios::app);*/
 			for (j = 0; j < X; j++)
 				outfileP << B_population[j] << " ";
 			outfileP << endl;
-			/*outfileB.close();*/
 
-			/*outfileI.open(filenameI, ios::app);*/
 			for (j = 0; j < X; j++)
 				outfileP << I_population[j] << " ";
 			outfileP << endl;
@@ -913,7 +649,7 @@ int main()
 			if (i + 1 >= labelling_step)
 			{
 				outfileL.open(filenameL, ios::app);
-				for (k = 0; k < labels; k++)	//reduce this section after making code modular???????????????????????????????
+				for (k = 0; k < labels; k++)
 				{
 					for (j = 0; j < X; j++)
 					{
@@ -927,17 +663,18 @@ int main()
 				outfileH << heterozygosity.back() << " ";
 				outfileH.close();
 
-				//if fixation is reached before simulation ends (only able to detect at visualization steps, i.e. may miss the exact fixation)
+				//if fixation is reached before simulation ends (only able to detect at visualization steps, i.e. may miss the exact fixation step)
 				if (heterozygosity.back() == 0)
-					break;
-			}
+				{
+					//output the last data for outputfileF2 before breaking the loop which skips those lines.
+					outfileF2.open(filenameF2, ios::app);
+					outfileF2 << FramePos << " ";
+					outfileF2.close();
 
-			/*if (FrameMove == true)
-			{
-				outfileF1.open(filenameF1, ios::app);
-				outfileF1 << i << " ";
-				outfileF1.close();
-			}*/
+					std::cout << "Fixation reached." << endl;
+					break;
+				}
+			}
 
 			outfileF2.open(filenameF2, ios::app);
 			outfileF2 << FramePos << " ";
@@ -947,8 +684,9 @@ int main()
 
 	}
 
+	//shouldn't be used on clusters
+	//std::cin >> a;
 
+	std::cout << "Simulation End." << endl;
 
-
-	cin >> a;
 }
