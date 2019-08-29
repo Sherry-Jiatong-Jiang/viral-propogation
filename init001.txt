@@ -9,7 +9,7 @@ sim001F2.dat
 seed:
 0
 binomial:
-true
+1
 dt:
 100
 dx:
