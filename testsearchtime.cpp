@@ -39,7 +39,7 @@ int main()
 	int burst_size = 50;	//(50, 10-400)
 	int X = 100;	//max demes in frame
 	int N = 1000, Np = N * burst_size;//max bacteria, and max phages
-	int N0 = 1000;		//initial phage numbers in the each deme (N0 and N only affecting initial distribuiton, and can be accounted for by tuning probabilities)
+	int N0 = 1000;		//initial phage numbers in the each deme
 	int Nx = 10;	//initial number of demes which have phages
 	int simulation_steps = 4000;	//total simulation steps (total time/dt)
 	int visualization_steps = 10;	//how many steps before each output on the screen
