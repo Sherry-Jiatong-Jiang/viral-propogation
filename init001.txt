@@ -7,13 +7,15 @@ sim001L.dat
 filenameF2:
 sim001F2.dat
 seed:
-1
+0
+binomial:
+true
 dt:
 100
 dx:
 0.1
 tao:
-50
+20
 burst_size:
 50
 X:
@@ -25,7 +27,7 @@ N0:
 Nx:
 10
 simulation_steps:
-2000
+6000
 visualization_steps:
 20
 labelling_step:
@@ -37,4 +39,4 @@ qiI:
 qiB:
 0.01
 pmigra:
-0.1
+0.2

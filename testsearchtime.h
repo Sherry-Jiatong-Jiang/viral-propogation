@@ -3,17 +3,6 @@ using std::vector;
 #include <iostream>
 using std::ostream;
 
-class Phage
-{
-  
-public:
-
-  int label;
-
-  Phage(): label(1) {}
-  
-};
-
 
 class Bacterium
 {

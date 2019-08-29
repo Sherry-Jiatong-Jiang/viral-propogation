@@ -31,7 +31,7 @@ int main()
 	string filenameF2 = "sim001F2.dat";
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
-	bool binomial = false;
+	bool binomial = true;
 	//system parameters
 	double dt = 1;   //1 unit simulation step time (min) only for record
 	double dx = 31.62;	//31.62 (sqrt(1000) for matlab simulation) unit deme length (um) only for record
@@ -39,7 +39,7 @@ int main()
 	int burst_size = 50;	//(50, 10-400)
 	int X = 100;	//max demes in frame
 	int N = 1000, Np = N * burst_size;//max bacteria, and max phages
-	int N0 = 1000;		//initial phage numbers in the each deme
+	int N0 = 1000;		//initial phage numbers in the each deme 
 	int Nx = 10;	//initial number of demes which have phages
 	int simulation_steps = 4000;	//total simulation steps (total time/dt)
 	int visualization_steps = 10;	//how many steps before each output on the screen
@@ -140,7 +140,7 @@ int main()
 	int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
 
 	vector <vector <Bacterium*>* > demesB(X);
-	vector <vector <Phage*>* > demesP(X);
+	vector <vector <int>* > demesP(X);
 
 
 	//random_device rd;
@@ -171,14 +171,13 @@ int main()
 
 	for (i = 0; i < X; i++)
 	{
-		demesP[i] = new vector<Phage*>;	//X demes of phages in total
+		demesP[i] = new vector<int>;	//X demes of phages in total
 
 		if (i < Nx)
 		{
 			for (j = 0; j < N0; j++)
 			{
-				(*demesP[i]).push_back(new Phage);
-				(*demesP[i])[j]->label = 0;
+				(*demesP[i]).push_back(0);
 			}
 		}
 
@@ -219,7 +218,7 @@ int main()
 		{
 			for (i = 0; i < labels; i++)
 			{
-				if ((*demesP[j])[k]->label == i + 1)	//+1 because actual label is greater than index.(start from 0 and 1) 
+				if ((*demesP[j])[k] == i + 1)	//+1 because actual label is greater than index.(start from 0 and 1) 
 				{
 					label_proportion[i][j] += 1;
 				}
@@ -284,7 +283,7 @@ int main()
 			{
 				for (j = 0; j < (*demesP[k]).size(); j++)
 				{
-					(*demesP[k])[j]->label = k + 1;
+					(*demesP[k])[j] = k + 1;
 				}
 
 			}
@@ -330,7 +329,6 @@ int main()
 						break;
 					}
 				}
-				delete (*demesP[j])[b];
 				{(*demesP[j]).erase((*demesP[j]).begin() + b); }
 				total_phage_size = total_phage_size - 1;
 			}
@@ -383,13 +381,12 @@ int main()
 				//if infecting uninfected bacteria:
 				if ((*((*demesB[j])[bacterium_index])).infected == false && (*((*demesB[j])[bacterium_index])).lysed == false)
 				{
-					(*((*demesB[j])[bacterium_index])).label = (*((*demesP[j])[b])).label;
+					(*((*demesB[j])[bacterium_index])).label = (*demesP[j])[b];
 					(*((*demesB[j])[bacterium_index])).infected = true;
 
 					(*((*demesB[j])[bacterium_index])).infectionStep = i;
 
 					//delete phage after infection
-					delete (*demesP[j])[b];
 					(*demesP[j]).erase((*demesP[j]).begin() + b);
 					total_phage_size = total_phage_size - 1;
 				}
@@ -398,7 +395,6 @@ int main()
 				else if ( (*((*demesB[j])[bacterium_index])).lysed == false)
 				{
 					//delete phage after infection
-					delete (*demesP[j])[b];
 					(*demesP[j]).erase((*demesP[j]).begin() + b);
 					total_phage_size = total_phage_size - 1;
 				}
@@ -469,7 +465,7 @@ int main()
 					else
 					{
 						//create new deme if moving to the right.
-						demesP.push_back(new vector<Phage*>);
+						demesP.push_back(new vector<int>);
 						demesB.push_back(new vector<Bacterium*>);
 						for (k = 0; k < N; k++)
 						{
@@ -489,10 +485,6 @@ int main()
 						//delete first deme (only at the end in order not to mess up with indexes).
 						total_phage_size -= (*demesP[0]).size();
 
-						for (k = 0; k < (*demesP[0]).size(); k++)
-						{
-							delete (*demesP[0])[k];
-						}
 						for (k = 0; k < (*demesB[0]).size(); k++)
 						{
 							delete (*demesB[0])[k];
@@ -538,11 +530,7 @@ int main()
 			{
 				if (((*((*demesB[j])[w])).infected == true) && (i - (*((*demesB[j])[w])).infectionStep == tao) && ((*((*demesB[j])[w])).lysed == false))
 				{
-					for (c = 0; c < burst_size; c++)
-					{
-						(*demesP[j]).push_back(new Phage);
-						(*demesP[j])[(*demesP[j]).size() - 1]->label = (*((*demesB[j])[w])).label;
-					}
+					(*demesP[j]).insert((*demesP[j]).end(), burst_size, (*((*demesB[j])[w])).label);
 					(*((*demesB[j])[w])).lysed = true;
 				}
 			}
@@ -585,7 +573,7 @@ int main()
 				{
 					for (w = 0; w < labels; w++)
 					{
-						if ((*demesP[j])[k]->label == w + 1)	//+1 because actual label is greater than index.(start from 0 and 1) 
+						if ((*demesP[j])[k] == w + 1)	//+1 because actual label is greater than index.(start from 0 and 1) 
 						{
 							label_proportion[w][j] += 1;
 							break;
