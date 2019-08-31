@@ -1,0 +1,3 @@
+for /l %%x in (14, 1, 258) do (echo %%x
+   rename "C:\Users\Public\jobarray5\jobs\sim_1 - Copy (%%x)" sim_%%x
+)
