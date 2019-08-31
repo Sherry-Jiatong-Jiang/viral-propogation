@@ -67,4 +67,5 @@ cd /rds/user/jj455/hpc-work/jobarray0
 dos2unix jobsubmission.bat
 sbatch ./jobsubmission.bat
 
+jj455@login-cpu.hpc.cam.ac.uk:/rds/user/jj455/hpc-work/jobarray5/test_job_15072200_90.out C:\Users\Public
 pscp -r jj455@login-cpu.hpc.cam.ac.uk:/rds/user/jj455/hpc-work/jobarray0 C:\Users\Public
