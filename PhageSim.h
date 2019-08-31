@@ -1,7 +1,5 @@
-#include <vector>
-using std::vector;
-#include <iostream>
-using std::ostream;
+
+using namespace std;
 
 
 class Bacterium

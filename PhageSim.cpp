@@ -1,21 +1,24 @@
 #include "PhageSim.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cmath>	//for rounding
 #include <array>
 #include <vector>
 #include <random>	//for random device and mt19937
+#include <string>
 
 using namespace std;
 
 ifstream initfile;
-
+ifstream loadcheckpoint;
 ofstream outfileP;
 ofstream outfileH;
 ofstream outfileL;
 ofstream outfileF2;
+ofstream checkpoint;
 
-string initfilename = "init001.txt";
+string initfilename = "init.txt";
 
 
 
@@ -25,10 +28,10 @@ int main()
 	/*parameters whose final values will be read from init file */
 
 	//files that keep P, B, I populations, heterozygosity, labelling proportions, and framemoving steps and frame positions at each step.
-	string filenameP = "sim001P.dat";	//must be different everytime! otherwise will always append to previous file.
-	string filenameH = "sim001H.dat";
-	string filenameL = "sim001L.dat";
-	string filenameF2 = "sim001F2.dat";
+	string filenameP = "sim0P.dat";	//must be different everytime! otherwise will always append to previous file.
+	string filenameH = "sim0H.dat";
+	string filenameL = "sim0L.dat";
+	string filenameF2 = "sim0F2.dat";
 	//random seed for sequence of random generators
 	unsigned int seed = 1;
 	bool binomial = 1;
@@ -44,8 +47,8 @@ int main()
 	int simulation_steps = 20000;	//total simulation steps (total time/dt)
 	int visualization_steps = 20;	//every how many steps before each output on the screen
 	int labelling_step = 2000;	//how many steps to reach equilibrium before labelling phages, better to specify as integer times of visualization_steps to be able to record the very initial Ht value.
-	int starting_step = 0;	//which step does the current simulation begin with (set to be the second last (safer than last) recorded paused step. Need to remember P, H, and L will have one repetitive line. )
-	int pausing_steps = 1000;	//every how many steps to record the whole system down in order to continue simulation later from the pausing step (make use of longer cluster simulation time)
+	int starting_step = 0;	//which step does the current simulation begin with (set to be the second last recorded pausing step. (Check checkpoint file index)) (Or at least have to be integer times of Pausing_steps!) Then new output files are created to continue data after that step.
+	int pausing_steps = 1000;	//every how many steps to record all the info about the whole system in order to continue simulation later from the pausing step (make use of longer cluster simulation time)
 	//phage probs parameters (per timestep)
 	double qd = 0;	//(0) death probs
 	double qiI = 0.01;	//(try different orders of mag) infecting infected bacteria probs
@@ -57,32 +60,13 @@ int main()
 	string paraName;
 
 	initfile.open(initfilename, ios::in);
-	for (j = 0; j < 21; j++)
+	for (j = 0; j < 19; j++)
 	{
 		try
 		{
 			initfile >> paraName;
-			if (paraName == "filenameP:")
-			{
-				initfile >> filenameP;
-				std::cout << "filenameP:" << endl << filenameP << endl;
-			}
-			else if (paraName == "filenameH:")
-			{
-				initfile >> filenameH;
-				std::cout << "filenameH:" << endl << filenameH << endl;
-			}
-			else if (paraName == "filenameL:")
-			{
-				initfile >> filenameL;
-				std::cout << "filenameL:" << endl << filenameL << endl;
-			}
-			else if (paraName == "filenameF2:")
-			{
-				initfile >> filenameF2;
-				std::cout << "filenameF2:" << endl << filenameF2 << endl;
-			}
-			else if (paraName == "seed:")
+			
+			if (paraName == "seed:")
 			{
 				initfile >> seed;
 				std::cout << "seed:" << endl << seed << endl;
@@ -147,6 +131,16 @@ int main()
 				initfile >> labelling_step;
 				std::cout << "labelling_step:" << endl << labelling_step << endl;
 			}
+			else if (paraName == "starting_step:")
+			{
+				initfile >> starting_step;
+				std::cout << "starting_step:" << endl << labelling_step << endl;
+			}
+			else if (paraName == "pausing_steps:")
+			{
+				initfile >> pausing_steps;
+				std::cout << "pausing_steps:" << endl << labelling_step << endl;
+			}
 			else if (paraName == "qd:")
 			{
 				initfile >> qd;
@@ -180,13 +174,19 @@ int main()
 		}
 
 	}
+
+	filenameP = "sim" + to_string(starting_step) + "P.dat";
+	filenameH = "sim" + to_string(starting_step) + "H.dat";
+	filenameL = "sim" + to_string(starting_step) + "L.dat";
+	filenameF2 = "sim" + to_string(starting_step) + "F2.dat";
+
 	initfile.close();
 
 
 	
 
 
-	int labels = X;	// << X for current initialization scheme! number of initial different gene labels, constant to be used to initialize array size later
+	int labels = X;	//number of initial different gene labels
 
 	//parameters relating to output
 	vector <int> P_population(X);	//output of phage population distribution
@@ -197,12 +197,13 @@ int main()
 	int tot = 0;	//temporary storage of total phage population at each timestep 
 	vector<double> label_frequency(labels);	//each element corresponds to the total frequency of a label withinin the whole population, to be used in the calculation of heterozygosity.
 	vector<double> heterozygosity;	//of size (simulation_steps / visualization_steps + 1), array to characterise genetic diversity at the wave front
-
+	int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
+	
 	//intermediate parameters
 	int total_phage_index = 0, total_phage_size = 0, bacterium_index = 0, phage_index = 0, left_phage_index = 0, right_phage_index = 0;
 	int death_number = 0, infect_B_number = 0, infect_I_number = 0, migration_number = 0;
 	int direction = 0;
-	int FramePos = 0;	//keeps track of how many demes the frame has moved forward by.
+	
 
 	vector <vector <Bacterium*>* > demesB(X);
 	vector <vector <int>* > demesP(X);
@@ -233,7 +234,7 @@ int main()
 				(*demesB[i])[j]->infected = false;
 				(*demesB[i])[j]->label = 0;
 				(*demesB[i])[j]->lysed = false;
-				(*demesB[i])[j]->infectionStep = -1;
+				(*demesB[i])[j]->infectionStep = 0;
 			}
 		}
 
@@ -251,17 +252,9 @@ int main()
 
 		}
 
-	}
 
-	//if the current simulation is continued from previous pausing steps
-	else
-	{
-		//read deme data from intermediate step!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	}
 
-		
-	
-	/*step 0 output showing initial distribution*/
+		/*step 0 output showing initial distribution*/
 
 		//initialize label_proportion vector dimension
 		vector <double> lab_prop(X);
@@ -337,8 +330,68 @@ int main()
 				}
 			}
 		}
-		std::cout.precision(2);
-		std::cout << "Current simulation step: " << 0 << endl;
+	}
+
+	//if the current simulation is continued from previous pausing steps
+	else
+	{
+		//read data from checkpointstarting_steps.dat
+		loadcheckpoint.open("checkpoint" + to_string(starting_step) + ".dat", ios::in);
+
+		loadcheckpoint >> FramePos;
+
+		int num;	
+		string str;
+		int j;
+
+		for (j = 0; j < X; j++)
+		{
+			getline(loadcheckpoint, str);
+			demesP[j] = new vector<int>;
+			istringstream ss(str);
+			while (ss >> num)
+			{
+				(*demesP[j]).push_back(num);
+			}
+		}
+		
+
+		for (j = 0; j < X; j++)
+		{
+			getline(loadcheckpoint, str);
+			demesB[j] = new vector<Bacterium*>;
+			istringstream ss(str);
+			while (ss >> num)
+			{
+				(*demesB[j]).push_back(new Bacterium);
+				(*demesB[j]).back()->label = num;
+				ss >> num;
+				(*demesB[j]).back()->infected = num;
+				ss >> num;
+				(*demesB[j]).back()->lysed = num;
+				ss >> num;
+				(*demesB[j]).back()->infectionStep = num;
+			}
+		}
+		loadcheckpoint.close();
+
+		//vector initialization (without output)
+		vector <double> lab_prop(X);
+		for (j = 0; j < labels; j++)
+		{
+			label_proportion[j] = lab_prop;
+		}
+
+		for (j = 0; j < X; j++)
+		{
+			P_population[j] = (*demesP[j]).size();
+			I_population[j] = 0;
+			B_population[j] = 0;
+		}
+	}
+		
+	std::cout.precision(2);
+	std::cout << "Current simulation step: " << starting_step << endl;
 
 
 	
@@ -347,8 +400,8 @@ int main()
 
 	/*Simulation steps*/
 
-	//i: simulation timestep
-	for (i = 0; i < simulation_steps; i++)
+	//i: simulation timestep (generation number, cycle number). extracting infomation about the starting_step and begin with the (starting_step + 1)th step.
+	for (i = starting_step; i < simulation_steps; i++)
 	{
 
 		/*if at equilibrium, label phages*/
@@ -373,7 +426,7 @@ int main()
 
 	
 
-		/*die*/
+		/*die*/ //not currently used
 
 			if (binomial == false)
 			{
@@ -548,7 +601,7 @@ int main()
 							(*demesB[j + 1])[k]->infected = false;
 							(*demesB[j + 1])[k]->label = 0;
 							(*demesB[j + 1])[k]->lysed = false;
-							(*demesB[j + 1])[k]->infectionStep = -1;
+							(*demesB[j + 1])[k]->infectionStep = 0;
 						}
 
 
@@ -611,10 +664,35 @@ int main()
 			}
 		}
 
+		/*checkpoint output at pausing_steps*/
 
+		if ((i + 1) % pausing_steps == 0)
+		{
+			//output to checkpoint(i+1).dat 
+			checkpoint.open("checkpoint" + to_string(i + 1) + ".dat", ios::out);
 
+			checkpoint << FramePos << endl;
+			
+			for (j = 0; j < X; j++)
+			{
+				//note: if (*demesP[j]).size() is zero, an empty line will be written.
+				for (k = 0; k < (*demesP[j]).size(); k++)
+					checkpoint << (*demesP[j])[k] << " ";
+				checkpoint << endl;
+			}
+			
+			for (j = 0; j < X; j++)
+			{
+				//note: if (*demesB[j]).size() is zero, an empty line will be written.
+				for (k = 0; k < (*demesB[j]).size(); k++)
+					checkpoint << (*demesB[j])[k]->label << " " << (*demesB[j])[k]->infected << " " << (*demesB[j])[k]->lysed << " " << (*demesB[j])[k]->infectionStep << " ";
+				checkpoint << endl;
+			}
 
-		/*temporary output*/
+			checkpoint.close();
+		}
+
+		/*data output at visualization_steps*/
 
 		if ((i + 1) % visualization_steps == 0)
 		{
@@ -626,7 +704,6 @@ int main()
 					label_proportion[w][j] = 0;
 				}
 			}
-
 			for (j = 0; j < demesP.size(); j++)
 			{
 				P_population[j] = (*demesP[j]).size();
