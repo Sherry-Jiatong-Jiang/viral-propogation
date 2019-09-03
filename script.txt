@@ -59,7 +59,11 @@ dos2unix: converting file jobsubmission.bat to Unix format ...
 [jj455@login-e-15 hpc-work]$ sbatch ./jobsubmission.bat
 Submitted batch job 14928256
 
+jobarray7 that need continual:
+3,4,5,6,7,9,16,17,18,19,20,21,22,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,53,55,101--160,161--167,169,172-180,241--260
 
+
+gstatement -p FUSCO-SL3-CPU -u jj455
 
 pscp -r C:\Users\Public\jobarray0 jj455@login-cpu.hpc.cam.ac.uk:/rds/user/jj455/hpc-work
 
