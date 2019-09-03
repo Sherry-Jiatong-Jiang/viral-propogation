@@ -9,7 +9,7 @@ pausing_steps:
 labelling_step:
 1000
 seed:
-0
+1
 binomial:
 1
 dt:
@@ -23,7 +23,7 @@ burst_size:
 X:
 100
 N:
-1000
+200
 N0:
 100
 Nx:
@@ -36,3 +36,5 @@ qiB:
 0.01
 pmigra:
 0.2
+max_occupancy:
+1000

@@ -47,20 +47,24 @@ int main()
 	int simulation_steps = 20000;	//total simulation steps (total time/dt)
 	int visualization_steps = 20;	//every how many steps before each output on the screen
 	int labelling_step = 2000;	//how many steps to reach equilibrium before labelling phages, better to specify as integer times of visualization_steps to be able to record the very initial Ht value.
-	int starting_step = 0;	//which step does the current simulation begin with (set to be the second last recorded pausing step. (Check checkpoint file index)) (Or at least have to be integer times of Pausing_steps!) Then new output files are created to continue data after that step.
+	int starting_step = 0;	/*which step does the current simulation begin with 
+	set to be the second last recorded pausing step, or the last recorded pausing step if job outfile shows a few more steps after the last pausing step, as would not want the last step to be timeouted halfway through the step.  
+	(have to be integer times of Pausing_steps!) Then new output files are created to continue data after that step.*/
 	int pausing_steps = 1000;	//every how many steps to record all the info about the whole system in order to continue simulation later from the pausing step (make use of longer cluster simulation time)
 	//phage probs parameters (per timestep)
 	double qd = 0;	//(0) death probs
 	double qiI = 0.01;	//(try different orders of mag) infecting infected bacteria probs
 	double qiB = 0.01;	//(try different orders of mag) infecting uninfected bacteria probs
 	double pmigra = 0.2;	//(0.2, 0.1-0.3) migration probability     (move to either side with pmigra/2, with exception of 1st deme which only can move to right with migra/2)
+	int max_occupancy = 1000;	/*theoretical number of bacteria per deme that gives full volume fraction under given dx
+	(or number of bacteria that gives phage in the same deme to collide with a bacterium in one timestep of dt probability 1)*/
 
 
 	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
 	string paraName;
 
 	initfile.open(initfilename, ios::in);
-	for (j = 0; j < 19; j++)
+	for (j = 0; j < 20; j++)
 	{
 		try
 		{
@@ -160,6 +164,11 @@ int main()
 			{
 				initfile >> pmigra;
 				std::cout << "pmigra:" << endl << pmigra << endl;
+			}
+			else if (paraName == "max_occupancy:")
+			{
+				initfile >> max_occupancy;
+				std::cout << "max_occupancy:" << endl << max_occupancy << endl;
 			}
 			else
 			{
@@ -497,34 +506,35 @@ int main()
 				}
 			}
 
-			//randomly pick one bacterium from the same deme if bacteria exist in that deme
+			//randomly pick one bacterium from the same deme if bacteria exist in that deme with probability demeB[j]size / max_occupancy
 			if ((*demesB[j]).size() > 0)
 			{
-
-				int size = (*demesB[j]).size() - 1;
-				uniform_int_distribution<int> dist3{ 0, size };
-				// get random numbers with:
+				uniform_int_distribution<int> dist3{ 0, max_occupancy};
 				bacterium_index = dist3(e);
-
-				//if infecting uninfected bacteria:
-				if ((*((*demesB[j])[bacterium_index])).infected == false && (*((*demesB[j])[bacterium_index])).lysed == false)
+				int size = (*demesB[j]).size();
+				if (bacterium_index < size)
 				{
-					(*((*demesB[j])[bacterium_index])).label = (*demesP[j])[b];
-					(*((*demesB[j])[bacterium_index])).infected = true;
+				
+					//if infecting uninfected bacteria:
+					if ((*((*demesB[j])[bacterium_index])).infected == false && (*((*demesB[j])[bacterium_index])).lysed == false)
+					{
+						(*((*demesB[j])[bacterium_index])).label = (*demesP[j])[b];
+						(*((*demesB[j])[bacterium_index])).infected = true;
 
-					(*((*demesB[j])[bacterium_index])).infectionStep = i;
+						(*((*demesB[j])[bacterium_index])).infectionStep = i;
 
-					//delete phage after infection
-					(*demesP[j]).erase((*demesP[j]).begin() + b);
-					total_phage_size = total_phage_size - 1;
-				}
+						//delete phage after infection
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+						total_phage_size = total_phage_size - 1;
+					}
 
-				//if infecting infected bacteria:
-				else if ( (*((*demesB[j])[bacterium_index])).lysed == false)
-				{
-					//delete phage after infection
-					(*demesP[j]).erase((*demesP[j]).begin() + b);
-					total_phage_size = total_phage_size - 1;
+					//if infecting infected bacteria:
+					else if ((*((*demesB[j])[bacterium_index])).lysed == false)
+					{
+						//delete phage after infection
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+						total_phage_size = total_phage_size - 1;
+					}
 				}
 			}
 		}
