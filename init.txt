@@ -38,3 +38,5 @@ pmigra:
 0.2
 max_occupancy:
 1000
+infection_mode:
+1

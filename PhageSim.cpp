@@ -58,13 +58,14 @@ int main()
 	double pmigra = 0.2;	//(0.2, 0.1-0.3) migration probability     (move to either side with pmigra/2, with exception of 1st deme which only can move to right with migra/2)
 	int max_occupancy = 1000;	/*theoretical number of bacteria per deme that gives full volume fraction under given dx
 	(or number of bacteria that gives phage in the same deme to collide with a bacterium in one timestep of dt probability 1)*/
-
+	int infection_mode = 0;	//0: phage that infect infected bacteria will die (earliest implemented);
+	//1:phage are not allowed to infect infected bacteria (in PDE paper); 2: coinfection, i.e. number getting burst depends on how long between infection and lysis.
 
 	int i, j, k, a = 0, b = 0, c = 0, w = 0; //to be used in the for loops
 	string paraName;
 
 	initfile.open(initfilename, ios::in);
-	for (j = 0; j < 20; j++)
+	for (j = 0; j < 21; j++)
 	{
 		try
 		{
@@ -138,12 +139,12 @@ int main()
 			else if (paraName == "starting_step:")
 			{
 				initfile >> starting_step;
-				std::cout << "starting_step:" << endl << labelling_step << endl;
+				std::cout << "starting_step:" << endl << starting_step << endl;
 			}
 			else if (paraName == "pausing_steps:")
 			{
 				initfile >> pausing_steps;
-				std::cout << "pausing_steps:" << endl << labelling_step << endl;
+				std::cout << "pausing_steps:" << endl << pausing_steps << endl;
 			}
 			else if (paraName == "qd:")
 			{
@@ -169,6 +170,11 @@ int main()
 			{
 				initfile >> max_occupancy;
 				std::cout << "max_occupancy:" << endl << max_occupancy << endl;
+			}
+			else if (paraName == "infection_mode:")
+			{
+				initfile >> infection_mode;
+				std::cout << "infection_mode:" << endl << infection_mode << endl;
 			}
 			else
 			{
@@ -475,69 +481,78 @@ int main()
 		
 
 		/*infect uninfected and infected bacteria*/
-
-		if (binomial == false)
-		{
-			infect_B_number = std::round(qiB * total_phage_size);
-		}
-		else
-		{
-			binomial_distribution<int> bdist2(total_phage_size, qiB);
-			infect_B_number = bdist2(e);
-		}
-		
-		for (k = 0; k < infect_B_number; k++)
-		{
-
-			uniform_int_distribution<int> dist2{ 1, total_phage_size };
-			// get random numbers with:
-			total_phage_index = dist2(e);
-
-			a = total_phage_index;
-			//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
-			for (j = 0; j < X; j++)
+			
+			/*if coinfection is not allowed*/
+			if (infection_mode < 2)
 			{
-				a = a - (*demesP[j]).size();
-				if (a <= 0)
+				if (binomial == false)
 				{
-					b = (*demesP[j]).size() + a;
-					b = b - 1;
-					break;
+					infect_B_number = std::round(qiB * total_phage_size);
 				}
-			}
-
-			//randomly pick one bacterium from the same deme if bacteria exist in that deme with probability demeB[j]size / max_occupancy
-			if ((*demesB[j]).size() > 0)
-			{
-				uniform_int_distribution<int> dist3{ 0, max_occupancy};
-				bacterium_index = dist3(e);
-				int size = (*demesB[j]).size();
-				if (bacterium_index < size)
+				else
 				{
-				
-					//if infecting uninfected bacteria:
-					if ((*((*demesB[j])[bacterium_index])).infected == false && (*((*demesB[j])[bacterium_index])).lysed == false)
+					binomial_distribution<int> bdist2(total_phage_size, qiB);
+					infect_B_number = bdist2(e);
+				}
+
+				for (k = 0; k < infect_B_number; k++)
+				{
+
+					uniform_int_distribution<int> dist2{ 1, total_phage_size };
+					// get random numbers with:
+					total_phage_index = dist2(e);
+
+					a = total_phage_index;
+					//work out vector index of phage out of total_phage_index: (*demesP[j])[b]
+					for (j = 0; j < X; j++)
 					{
-						(*((*demesB[j])[bacterium_index])).label = (*demesP[j])[b];
-						(*((*demesB[j])[bacterium_index])).infected = true;
-
-						(*((*demesB[j])[bacterium_index])).infectionStep = i;
-
-						//delete phage after infection
-						(*demesP[j]).erase((*demesP[j]).begin() + b);
-						total_phage_size = total_phage_size - 1;
+						a = a - (*demesP[j]).size();
+						if (a <= 0)
+						{
+							b = (*demesP[j]).size() + a;
+							b = b - 1;
+							break;
+						}
 					}
 
-					//if infecting infected bacteria:
-					else if ((*((*demesB[j])[bacterium_index])).lysed == false)
+					//randomly pick one bacterium from the same deme if bacteria exist in that deme with probability demeB[j]size / max_occupancy
+					if ((*demesB[j]).size() > 0)
 					{
-						//delete phage after infection
-						(*demesP[j]).erase((*demesP[j]).begin() + b);
-						total_phage_size = total_phage_size - 1;
+						uniform_int_distribution<int> dist3{ 0, max_occupancy };
+						bacterium_index = dist3(e);
+						int size = (*demesB[j]).size();
+						if (bacterium_index < size)
+						{
+							//it's ok that size includes lysed bacteria, because if they are chosen, simply nothing happens, equivalent as size hasn't included them. 
+							//if infecting uninfected bacteria:
+							if ((*((*demesB[j])[bacterium_index])).infected == false && (*((*demesB[j])[bacterium_index])).lysed == false)
+							{
+								(*((*demesB[j])[bacterium_index])).label = (*demesP[j])[b];
+								(*((*demesB[j])[bacterium_index])).infected = true;
+
+								(*((*demesB[j])[bacterium_index])).infectionStep = i;
+
+								//delete phage after infection
+								(*demesP[j]).erase((*demesP[j]).begin() + b);
+								total_phage_size = total_phage_size - 1;
+							}
+
+							//if infecting infected bacteria:
+							else if ((*((*demesB[j])[bacterium_index])).lysed == false)
+							{
+								if (infection_mode == 0)
+								{//delete phage after infection
+									(*demesP[j]).erase((*demesP[j]).begin() + b);
+									total_phage_size = total_phage_size - 1;
+								}
+								//if infection_mode = 1, then phage don't infect and don't die.
+							}
+						}
 					}
 				}
 			}
-		}
+			else
+			{/*coinfection*/}
 
 
 
