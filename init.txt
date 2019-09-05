@@ -23,7 +23,7 @@ burst_size:
 X:
 100
 N:
-200
+500
 N0:
 100
 Nx:
@@ -31,12 +31,14 @@ Nx:
 qd:
 0
 qiI:
-0.01
+0.00001
 qiB:
-0.01
+0.00001
 pmigra:
 0.2
-max_occupancy:
+max_bacteria:
 1000
 infection_mode:
+0
+migration_mode:
 1
