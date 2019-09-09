@@ -566,7 +566,6 @@ int main()
 
 
 
-
 		//Calculate unlysed bacteria density in each deme
 		for (j = 0; j < X; j++)
 		{
@@ -582,226 +581,88 @@ int main()
 
 		/*migration*/
 		
-			/*if pmigra is density-independent. randomly choose one phage, migrate phage, global update*/
-			if (migration_mode == 0)
+		/*if pmigra is density-independent. randomly choose one phage, migrate phage, global update*/
+		if (migration_mode == 0)
+		{
+			if (binomial == false)
 			{
-				if (binomial == false)
-				{
-					migration_number = std::round(pmigra * total_phage_size);
-				}
-				else
-				{
-					binomial_distribution<int> bdist4(total_phage_size, pmigra);
-					migration_number = bdist4(e);
-				}
-				for (k = 0; k < migration_number; k++)
-				{
-
-					//randomly pick one phage
-
-					uniform_int_distribution<int> dist4{ 1, total_phage_size };
-
-					// get random numbers with:
-					total_phage_index = dist4(e);
-
-					a = total_phage_index;
-					//work out vector index of phage out of total_phage_index: (*demesP[j])[b] 
-					for (j = 0; j < X; j++)
-					{
-						a = a - (*demesP[j]).size();
-						if (a <= 0)
-						{
-							b = (*demesP[j]).size() + a;
-							b = b - 1;
-							break;
-						}
-					}
-					//if in the first deme, only move to the right, but with half pmigra probs
-					if (j == 0)
-					{
-						uniform_int_distribution<int> dist5{ 0, 1 };
-						direction = dist5(e);
-						if (direction == 0)
-						{
-							(*demesP[j + 1]).push_back((*demesP[j])[b]);
-							(*demesP[j]).erase((*demesP[j]).begin() + b);
-						}
-					}
-					//if in the last deme, create new deme if moving to right
-					else if (j == X - 1)
-					{
-						//randomly pick one phage
-
-						uniform_int_distribution<int> dist6{ 0, 1 };
-						// get random numbers with:
-						direction = dist6(e);
-
-						if (direction == 1)
-						{
-							(*demesP[j - 1]).push_back((*demesP[j])[b]);
-							(*demesP[j]).erase((*demesP[j]).begin() + b);
-						}
-						else
-						{
-							//create new deme if moving to the right.
-							demesP.push_back(new vector<int>);
-							demesB.push_back(new vector<Bacterium*>);
-							for (k = 0; k < N; k++)
-							{
-								(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
-								(*demesB[j + 1])[k]->infected = false;
-								(*demesB[j + 1])[k]->label = 0;
-								(*demesB[j + 1])[k]->lysed = false;
-								(*demesB[j + 1])[k]->infectionStep = 0;
-							}
-
-
-
-							(*demesP[j + 1]).push_back((*demesP[j])[b]);
-							(*demesP[j]).erase((*demesP[j]).begin() + b);
-
-
-							//delete first deme (only at the end in order not to mess up with indexes).
-							total_phage_size -= (*demesP[0]).size();
-
-							for (k = 0; k < (*demesB[0]).size(); k++)
-							{
-								delete (*demesB[0])[k];
-							}
-							delete demesP[0];
-							delete demesB[0];
-							demesP.erase(demesP.begin());
-							demesB.erase(demesB.begin());
-
-							FramePos++;
-							std::cout << "FramePos: " << FramePos << endl;
-						}
-
-					}
-					else
-					{
-
-						//randomly pick one phage
-						uniform_int_distribution<int> dist7{ 0, 1 };
-
-						// get random numbers with:
-						direction = dist7(e);
-
-						if (direction == 1)
-						{
-							(*demesP[j - 1]).push_back((*demesP[j])[b]);
-							(*demesP[j]).erase((*demesP[j]).begin() + b);
-						}
-						else
-						{
-							(*demesP[j + 1]).push_back((*demesP[j])[b]);
-							(*demesP[j]).erase((*demesP[j]).begin() + b);
-						}
-					}
-				}
+				migration_number = std::round(pmigra * total_phage_size);
 			}
-			/*if pmigra is dependent on local bacteria density. randomly choose a deme, migrate a number of phage from the deme at the same time, global update*/
 			else
 			{
+				binomial_distribution<int> bdist4(total_phage_size, pmigra);
+				migration_number = bdist4(e);
+			}
+			for (k = 0; k < migration_number; k++)
+			{
+
+				//randomly pick one phage
+
+				uniform_int_distribution<int> dist4{ 1, total_phage_size };
+
+				// get random numbers with:
+				total_phage_index = dist4(e);
+
+				a = total_phage_index;
+				//work out vector index of phage out of total_phage_index: (*demesP[j])[b] 
 				for (j = 0; j < X; j++)
 				{
-
-					uniform_int_distribution<int> dist8{ 0, X - 1 };
-					deme_index = dist8(e);
-
-					//formula for effective pmigra that depends on local bacteria density
-					pmigra_eff = pmigra * (1 - (M_PI - 1) * unlysed_bacteria_number[deme_index] / max_bacteria / 0.5 - 0.85571 * pow ((unlysed_bacteria_number[deme_index] / max_bacteria / 0.5), 2));
-
-					if (binomial == false)
+					a = a - (*demesP[j]).size();
+					if (a <= 0)
 					{
-						migration_number = std::round(pmigra_eff * (*demesP[deme_index]).size());
+						b = (*demesP[j]).size() + a;
+						b = b - 1;
+						break;
+					}
+				}
+				//if in the first deme, only move to the right, but with half pmigra probs
+				if (j == 0)
+				{
+					uniform_int_distribution<int> dist5{ 0, 1 };
+					direction = dist5(e);
+					if (direction == 0)
+					{
+						(*demesP[j + 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
+				}
+				//if in the last deme, create new deme if moving to right
+				else if (j == X - 1)
+				{
+					//randomly pick one phage
+
+					uniform_int_distribution<int> dist6{ 0, 1 };
+					// get random numbers with:
+					direction = dist6(e);
+
+					if (direction == 1)
+					{
+						(*demesP[j - 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
 					}
 					else
 					{
-						binomial_distribution<int> bdist5((*demesP[deme_index]).size(), pmigra_eff);
-						migration_number = bdist5(e);
-					}
-				
-					//randomly pick one phage from deme every time, pick migration_number times.
-
-					for (w = 0; w < migration_number; w++)
-					{
-						//randomly select a phage in the deme: (*demesP[j])[b] 
-						uniform_int_distribution<int> dist9{ 0, migration_number - 1};
-						b = dist9(e);
-
-
-						//if in the first deme, only move to the right, but with half pmigra probs
-						if (deme_index == 0)
+						//create new deme if moving to the right.
+						demesP.push_back(new vector<int>);
+						demesB.push_back(new vector<Bacterium*>);
+						for (k = 0; k < N; k++)
 						{
-							uniform_int_distribution<int> dist10{ 0, 1 };
-							direction = dist10(e);
-							if (direction == 0)
-							{
-								(*demesP[deme_index + 1]).push_back((*demesP[deme_index])[b]);
-								(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
-							}
+							(*demesB[j + 1]).push_back(new Bacterium);	//N bacteria per deme initially
+							(*demesB[j + 1])[k]->infected = false;
+							(*demesB[j + 1])[k]->label = 0;
+							(*demesB[j + 1])[k]->lysed = false;
+							(*demesB[j + 1])[k]->infectionStep = 0;
 						}
-						//if in the last deme, create new deme if migrating to the right
-						else if (deme_index == X - 1)
-						{
 
-							uniform_int_distribution<int> dist11{ 0, 1 };
-							// get random numbers with:
-							direction = dist11(e);
 
-							if (direction == 1)
-							{
-								(*demesP[deme_index - 1]).push_back((*demesP[deme_index])[b]);
-								(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
-							}
-							else
-							{
-								//create new deme if moving to the right, if not already done so.
-								if (demesB.size() == X)
-								{
-									demesP.push_back(new vector<int>);
-									demesB.push_back(new vector<Bacterium*>);
-									for (k = 0; k < N; k++)
-									{
-										(*demesB[deme_index + 1]).push_back(new Bacterium);	//N bacteria per deme initially
-										(*demesB[deme_index + 1])[k]->infected = false;
-										(*demesB[deme_index + 1])[k]->label = 0;
-										(*demesB[deme_index + 1])[k]->lysed = false;
-										(*demesB[deme_index + 1])[k]->infectionStep = 0;
-									}
-								}
-									(*demesP[deme_index + 1]).push_back((*demesP[deme_index])[b]);
-									(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
-								
-							}
 
-						}
-						else
-						{
+						(*demesP[j + 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
 
-							//randomly pick one phage
-							uniform_int_distribution<int> dist12{ 0, 1 };
 
-							// get random numbers with:
-							direction = dist12(e);
+						//delete first deme (only at the end in order not to mess up with indexes).
+						total_phage_size -= (*demesP[0]).size();
 
-							if (direction == 1)
-							{
-								(*demesP[deme_index - 1]).push_back((*demesP[deme_index])[b]);
-								(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
-							}
-							else
-							{
-								(*demesP[deme_index + 1]).push_back((*demesP[deme_index])[b]);
-								(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
-							}
-						}
-					}
-
-					if (demesB.size() == X + 1)
-					{
-						//delete first deme (only at the end in order not to mess up with indexes), if frame has moved.
 						for (k = 0; k < (*demesB[0]).size(); k++)
 						{
 							delete (*demesB[0])[k];
@@ -810,18 +671,157 @@ int main()
 						delete demesB[0];
 						demesP.erase(demesP.begin());
 						demesB.erase(demesB.begin());
-						//update unlysed bacteria number vector after frame movement.
-						unlysed_bacteria_number.erase(unlysed_bacteria_number.begin());
-						unlysed_bacteria_number.push_back(N);
 
 						FramePos++;
 						std::cout << "FramePos: " << FramePos << endl;
 					}
+
+				}
+				else
+				{
+
+					//randomly pick one phage
+					uniform_int_distribution<int> dist7{ 0, 1 };
+
+					// get random numbers with:
+					direction = dist7(e);
+
+					if (direction == 1)
+					{
+						(*demesP[j - 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
+					else
+					{
+						(*demesP[j + 1]).push_back((*demesP[j])[b]);
+						(*demesP[j]).erase((*demesP[j]).begin() + b);
+					}
+				}
+			}
+		}
+		/*if pmigra is dependent on local bacteria density. randomly choose a deme, migrate a number of phage from the deme at the same time, global update*/
+		else
+		{
+			for (j = 0; j < X; j++)
+			{
+
+				uniform_int_distribution<int> dist8{ 0, X - 1 };
+				deme_index = dist8(e);
+
+				//formula for effective pmigra that depends on local bacteria density
+				pmigra_eff = pmigra * (1 - (M_PI - 1) * unlysed_bacteria_number[deme_index] / max_bacteria / 0.5 - 0.85571 * pow ((unlysed_bacteria_number[deme_index] / max_bacteria / 0.5), 2));
+					
+				if (binomial == false)
+				{
+					migration_number = std::round(pmigra_eff * (*demesP[deme_index]).size());
+				}
+				else
+				{
+					binomial_distribution<int> bdist5((*demesP[deme_index]).size(), pmigra_eff);
+					migration_number = bdist5(e);
 				}
 				
-			}
+				//randomly pick one phage from deme every time, pick migration_number times.
 
-		
+				for (w = 0; w < migration_number; w++)
+				{
+					//randomly select a phage in the deme: (*demesP[j])[b] 
+					uniform_int_distribution<int> dist9{ 0, migration_number - 1};
+					b = dist9(e);
+
+
+					//if in the first deme, only move to the right, but with half pmigra probs
+					if (deme_index == 0)
+					{
+						uniform_int_distribution<int> dist10{ 0, 1 };
+						direction = dist10(e);
+						if (direction == 0)
+						{
+							(*demesP[deme_index + 1]).push_back((*demesP[deme_index])[b]);
+							(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
+						}
+					}
+					//if in the last deme, create new deme if migrating to the right
+					else if (deme_index == X - 1)
+					{
+
+						uniform_int_distribution<int> dist11{ 0, 1 };
+						// get random numbers with:
+						direction = dist11(e);
+
+						if (direction == 1)
+						{
+							(*demesP[deme_index - 1]).push_back((*demesP[deme_index])[b]);
+							(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
+						}
+						else
+						{
+							//create new deme if moving to the right, if not already done so.
+							if (demesB.size() == X)
+							{
+								demesP.push_back(new vector<int>);
+								demesB.push_back(new vector<Bacterium*>);
+								for (k = 0; k < N; k++)
+								{
+									(*demesB[deme_index + 1]).push_back(new Bacterium);	//N bacteria per deme initially
+									(*demesB[deme_index + 1])[k]->infected = false;
+									(*demesB[deme_index + 1])[k]->label = 0;
+									(*demesB[deme_index + 1])[k]->lysed = false;
+									(*demesB[deme_index + 1])[k]->infectionStep = 0;
+								}
+							}
+							(*demesP[deme_index + 1]).push_back((*demesP[deme_index])[b]);
+							(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
+								
+						}
+					}
+					else
+					{
+
+						//randomly pick one phage
+						uniform_int_distribution<int> dist12{ 0, 1 };
+
+						// get random numbers with:
+						direction = dist12(e);
+
+						if (direction == 1)
+						{
+							(*demesP[deme_index - 1]).push_back((*demesP[deme_index])[b]);
+							(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
+						}
+						else
+						{
+							(*demesP[deme_index + 1]).push_back((*demesP[deme_index])[b]);
+							(*demesP[deme_index]).erase((*demesP[deme_index]).begin() + b);
+						}
+						
+					}
+				}
+				std::cout << "qq" << endl;
+
+				if (demesB.size() == X + 1)
+				{
+					//delete first deme (only at the end in order not to mess up with indexes), if frame has moved.
+					for (k = 0; k < (*demesB[0]).size(); k++)
+					{
+						delete (*demesB[0])[k];
+					}
+					delete demesP[0];
+					delete demesB[0];
+					demesP.erase(demesP.begin());
+					demesB.erase(demesB.begin());
+					//update unlysed bacteria number vector after frame movement.
+					unlysed_bacteria_number.erase(unlysed_bacteria_number.begin());
+					unlysed_bacteria_number.push_back(N);
+
+					FramePos++;
+					std::cout << "FramePos: " << FramePos << endl;
+				}
+				std::cout << "q" << endl;
+			}
+				
+		}
+
 
 
 		/*bacteria lysis and new phage creation*/
