@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES	//for pi
 #include <cmath>	//for rounding & calculating pmigra_eff
-#include "PhageSim.h"
+#include "withcoinfection.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>

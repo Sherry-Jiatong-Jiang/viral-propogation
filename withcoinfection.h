@@ -13,6 +13,6 @@ public:
   bool lysed;
   vector <int> labels;
   vector <int> steps;
-  Bacterium() : label(0), infected(false), lysed(false), infectionStep(-1), labels({}), steps({}) {}
+  Bacterium() : label(0), infected(false), lysed(false), infectionStep(0), labels({}), steps({}) {}
 };
 
