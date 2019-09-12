@@ -1,3 +1,18 @@
-for /l %%x in (14, 1, 258) do (echo %%x
-   rename "C:\Users\Public\jobarray5\jobs\sim_1 - Copy (%%x)" sim_%%x
+for /l %%x in (2, 1, 10) do (echo %%x
+   rename "D:\jobarray10 retrieved\jobs\sim221-240\sim0H (%%x).dat" "sim0H_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim221-240\sim0L (%%x).dat" "sim0L_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim221-240\sim0F2 (%%x).dat" "sim0F2_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim221-240\sim0P (%%x).dat" "sim0P_%%x.dat"
+)
+for /l %%x in (2, 1, 10) do (echo %%x
+   rename "D:\jobarray10 retrieved\jobs\sim241-260\sim0H (%%x).dat" "sim0H_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim241-260\sim0L (%%x).dat" "sim0L_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim241-260\sim0F2 (%%x).dat" "sim0F2_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim241-260\sim0P (%%x).dat" "sim0P_%%x.dat"
+)
+for /l %%x in (2, 1, 10) do (echo %%x
+   rename "D:\jobarray10 retrieved\jobs\sim201-220\sim0H (%%x).dat" "sim0H_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim201-220\sim0L (%%x).dat" "sim0L_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim201-220\sim0F2 (%%x).dat" "sim0F2_%%x.dat"
+   rename "D:\jobarray10 retrieved\jobs\sim201-220\sim0P (%%x).dat" "sim0P_%%x.dat"
 )
