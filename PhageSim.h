@@ -11,6 +11,6 @@ public:
   int infectionStep;
   bool infected;
   bool lysed;
-  Bacterium() : label(0), infected(false), lysed(false), infectionStep(-1){}
+  Bacterium() : label(0), infected(false), lysed(false), infectionStep(0){}
 };
 

@@ -1,17 +1,15 @@
-%Designed explicitly for starting_step = 0 with no ligation, with 20 seeds, all have reached fixation. 
+%Designed explicitly for starting_step = 0 with no concatnation, with 20 random seeds, all have reached fixation. 
 
-%input: y (Ne2 starting step after labelling); z (Ne1 ending step after
-%labelling); v_steps (visualizaiton_steps); half_vel (whether to divide
-%velocity, 2 if yes, 1 if no); deme_strt, deme_end (between which average
-%is taken to calculate max level for width calculation); demes (total deme number)
+%input: y (Ne2 starting simulation step after labelling); z (Ne1 ending simulation step after
+%labelling); v_steps (visualizaiton_steps); deme_strt, deme_end (between which average
+%is taken to calculate max level for width calculation. make sure both are at plateau.); demes (total deme number)
  
 %output: -2/pH1(1) (Ne1); -2/pH2(1) (Ne2); fixsteps (fixsteps); SD1 (std of fixsteps); pF(1) (v); width (w); SD2 (std of w).
 
-y=6000;
-z=5000;
+y=12000;
+z=6000;
 v_steps=20;
-half_vel=2;
-deme_strt=10;
+deme_strt=1;
 deme_end=50;
 demes=100;
 
@@ -99,6 +97,8 @@ load sim0F2_18.dat;
 load sim0F2_19.dat;
 load sim0F2_20.dat;
 
+%Keep as 1
+half_vel=1;
 
 [n1_1, p1_1] = size(sim0P_1);
 [n1_2, p1_2] = size(sim0P_2);
@@ -245,7 +245,7 @@ t5 = linspace(0,v_steps*(p5-1),p5);
 
 
 figure (1);
-for i=1:9:n1
+for i=1:15:n1
     subplot(1,3,1);
     plot(t1,(sim0P_1(i,:)+sim0P_2(i,:)+sim0P_3(i,:)+sim0P_4(i,:)+sim0P_5(i,:)+sim0P_6(i,:)+sim0P_7(i,:)+sim0P_8(i,:)+sim0P_9(i,:)+sim0P_10(i,:)+sim0P_11(i,:)+sim0P_12(i,:)+sim0P_13(i,:)+sim0P_14(i,:)+sim0P_15(i,:)+sim0P_16(i,:)+sim0P_17(i,:)+sim0P_18(i,:)+sim0P_19(i,:)+sim0P_20(i,:))/20);
     xlabel('Deme position');

@@ -12,8 +12,9 @@ using namespace std;
 
 int main()
 {
-	string Dir1 = "D:/jobarray14 retrieved/jobs/sim_";
-	string Dir2 = "D:/jobarray14 retrieved/jobs/";
+	//Change path sections of Dir1 and Dir2 before "/jobs"
+	string Dir1 = "D:/jobarray50/jobs/sim_";
+	string Dir2 = "D:/jobarray50/jobs/";
 
 
 	for (int N = 1; N < 21; N++)

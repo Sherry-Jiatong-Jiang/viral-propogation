@@ -1,12 +1,6 @@
 for /l %%x in (1, 1, 260) do (echo %%x
-   del "C:\Users\Public\jobarray18\jobs\sim_%%x\PhageSim.cpp"
-   copy "C:\Users\Public\withcoinfection\withcoinfection.cpp" "C:\Users\Public\jobarray18\jobs\sim_%%x\withcoinfection.cpp"
-   del "C:\Users\Public\jobarray18\jobs\sim_%%x\PhageSim.h"
-   copy "C:\Users\Public\withcoinfection\withcoinfection.h" "C:\Users\Public\jobarray18\jobs\sim_%%x\withcoinfection.h"
-)
-for /l %%x in (1, 1, 260) do (echo %%x
-   del "C:\Users\Public\jobarray19\jobs\sim_%%x\PhageSim.cpp"
-   copy "C:\Users\Public\withcoinfection\withcoinfection.cpp" "C:\Users\Public\jobarray19\jobs\sim_%%x\withcoinfection.cpp"
-   del "C:\Users\Public\jobarray19\jobs\sim_%%x\PhageSim.h"
-   copy "C:\Users\Public\withcoinfection\withcoinfection.h" "C:\Users\Public\jobarray19\jobs\sim_%%x\withcoinfection.h"
+   del "C:\Users\Public\jobarray50\jobs\sim_%%x\PhageSim.cpp"
+   copy "C:\Users\Public\withcoinfection.cpp" "C:\Users\Public\jobarray50\jobs\sim_%%x\withcoinfection.cpp"
+   del "C:\Users\Public\jobarray50\jobs\sim_%%x\PhageSim.h"
+   copy "C:\Users\Public\withcoinfection.h" "C:\Users\Public\jobarray50\jobs\sim_%%x\withcoinfection.h"
 )
