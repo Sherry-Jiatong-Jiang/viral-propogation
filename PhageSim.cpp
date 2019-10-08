@@ -364,6 +364,12 @@ int main()
 	{
 		//read data from checkpoint*starting_steps*.dat
 		loadcheckpoint.open("checkpoint" + to_string(starting_step) + ".dat", ios::in);
+		
+		if (loadcheckpoint.is_open() == 0)
+		{
+			std:cout << "Specified checkpoint file does not exist! Exiting program.";
+			return 1;
+		}
 
 		loadcheckpoint >> FramePos;
 

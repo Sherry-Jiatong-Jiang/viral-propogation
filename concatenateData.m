@@ -1,8 +1,13 @@
-%inputs: selected checkpoint; visualization_Steps; labelling_step.
+%=================================================================================================================
+%inputs: j=selected checkpoint; v_steps=visualization_steps;
+%l_step=labelling_step; labels=X (number of types of labels)
 
 j=4000;
 v_steps=20;
 l_step=2000;
+labels=100;
+
+%==================================================================================================================
 
 %load starting data
 
@@ -34,7 +39,7 @@ t3 = 0:(p3-1);
 [n5, p5] = size(simF2);
 t5 = 0:(p5-1);
 
-new0P = [sim0P(1:j/v_steps+1,:);simP]; 
+new0P = [sim0P(1:3*(j/v_steps+1),:);simP]; 
 new0F2 = [sim0F2(1:j/v_steps+1),simF2]; 
 
 if j >= l_step
@@ -45,7 +50,7 @@ else
 end
 
 if j >= l_step
-    new0L = [sim0L(1:(j-l_step)/v_steps+1,:);simL];
+    new0L = [sim0L(1:labels*((j-l_step)/v_steps+1),:);simL];
 elseif ((j < l_step)&&(j + v_steps * p2 >= l_step))
     new0L = simL;
 else
@@ -55,8 +60,8 @@ end
 
 figure(1)
 [n6,p6]=size(new0H);
-t6=0:(p6-1);
-scatter(t6,log(new0H));
+t6=1:(p6-1);
+scatter(t6,log(new0H(:,2:p6)));
 
 figure(2)
 [n7,p7]=size(new0F2);
@@ -69,8 +74,9 @@ delete(simF2dat);
 delete(simLdat);
 
 %save concatenated data to starting data
-
-save sim0H.dat new0H -ascii;
+if exist('new0H','var')==1
+    save sim0H.dat new0H -ascii;
+    save sim0L.dat new0L -ascii;
+end
 save sim0P.dat new0P -ascii;
 save sim0F2.dat new0F2 -ascii;
-save sim0L.dat new0L -ascii;

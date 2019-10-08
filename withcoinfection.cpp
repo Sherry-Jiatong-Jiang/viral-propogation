@@ -365,10 +365,17 @@ int main()
 	{
 		//read data from checkpoint*starting_steps*.dat
 		loadcheckpoint.open("checkpoint" + to_string(starting_step) + ".dat", ios::in);
+		
+		if (loadcheckpoint.is_open() == 0)
+		{
+			std:cout << "Specified checkpoint file does not exist! Exiting program.";
+			return 1;
+		}
 
 		loadcheckpoint >> FramePos;
 
-		int num;	
+		int num;
+		int vec_attri_size;
 		string str;
 		int j;
 
@@ -382,26 +389,51 @@ int main()
 				(*demesP[j]).push_back(num);
 			}
 		}
-		
 
-		for (j = 0; j < X; j++)
+		try
 		{
-			getline(loadcheckpoint, str);
-			demesB[j] = new vector<Bacterium*>;
-			istringstream ss(str);
-			while (ss >> num)
+			//each line is data for a deme
+			for (j = 0; j < X; j++)
 			{
-				(*demesB[j]).push_back(new Bacterium);
-				(*demesB[j]).back()->label = num;
-				ss >> num;
-				(*demesB[j]).back()->infected = num;
-				ss >> num;
-				(*demesB[j]).back()->lysed = num;
-				ss >> num;
-				(*demesB[j]).back()->infectionStep = num;
+				getline(loadcheckpoint, str);
+				demesB[j] = new vector<Bacterium*>;
+				istringstream ss(str);
+				while (ss >> num)
+				{
+					(*demesB[j]).push_back(new Bacterium);
+					(*demesB[j]).back()->label = num;
+					ss >> num;
+					(*demesB[j]).back()->infected = num;
+					ss >> num;
+					(*demesB[j]).back()->lysed = num;
+					ss >> num;
+					(*demesB[j]).back()->infectionStep = num;
+					ss >> num;
+					vec_attri_size = num;
+					for (k = 0; k < vec_attri_size; k++)
+					{
+						ss >> num;
+						((*demesB[j]).back()->labels).push_back(num);
+					}
+					for (k = 0; k < vec_attri_size; k++)
+					{
+						ss >> num;
+						((*demesB[j]).back()->steps).push_back(num);
+					}
+					ss >> num;
+					/*if two values before and after the two vectors (*demesB[j]).back()->labels and (*demesB[j]).back()->steps are different, 
+					it means reading was messed up somewhere and thus inconsistent. */
+					if (num != vec_attri_size)
+						throw 1;
+				}
 			}
+			loadcheckpoint.close();
 		}
-		loadcheckpoint.close();
+		catch (int e)
+		{
+			std::cout << "Inconsistent checkpoint data reading! Exiting program.";
+			return 1;
+		}
 
 		//vector initialization (without output)
 		vector <double> lab_prop(X);
@@ -980,7 +1012,19 @@ int main()
 			{
 				//note: if (*demesB[j]).size() is zero, an empty line will be written.
 				for (k = 0; k < (*demesB[j]).size(); k++)
-					checkpoint << (*demesB[j])[k]->label << " " << (*demesB[j])[k]->infected << " " << (*demesB[j])[k]->lysed << " " << (*demesB[j])[k]->infectionStep << " ";
+				{
+					checkpoint << (*demesB[j])[k]->label << " " << (*demesB[j])[k]->infected << " " << (*demesB[j])[k]->lysed << " " << (*demesB[j])[k]->infectionStep << " " << ((*demesB[j])[k]->labels).size() << " ";
+					for (w = 0; w < ((*demesB[j])[k]->labels).size(); w++)
+					{
+						checkpoint << (*demesB[j])[k]->labels[w] << " ";
+					}
+					for (w = 0; w < ((*demesB[j])[k]->labels).size(); w++)
+					{
+						checkpoint << (*demesB[j])[k]->steps[w] << " ";
+					}
+					//write vector length both before and after vectors, acting as a safeguard to be able to check whether reading is at the correct position.
+					checkpoint << ((*demesB[j])[k]->labels).size() << " ";
+				}
 				checkpoint << endl;
 			}
 
